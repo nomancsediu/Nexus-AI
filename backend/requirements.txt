@@ -5,3 +5,4 @@ groq
 youtube-transcript-api==1.2.4
 python-dotenv==1.2.1
 requests==2.33.1
+gunicorn

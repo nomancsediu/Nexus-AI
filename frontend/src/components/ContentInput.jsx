@@ -4,7 +4,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faYoutube } from '@fortawesome/free-brands-svg-icons'
 import { faFileLines, faArrowRight, faSpinner } from '@fortawesome/free-solid-svg-icons'
 
-const API = '/api'
+const API = import.meta.env.VITE_API_URL || '/api'
 
 export default function ContentInput({ onProcessed, apiKey }) {
   const [sourceType, setSourceType] = useState('youtube')

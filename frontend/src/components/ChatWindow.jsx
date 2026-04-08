@@ -4,7 +4,7 @@ import { faTableList, faPaperPlane, faSpinner, faFileText, faXmark, faArrowLeft 
 import MessageBubble from './MessageBubble'
 import SummaryPanel from './SummaryPanel'
 
-const API = '/api'
+const API = import.meta.env.VITE_API_URL || '/api'
 
 export default function ChatWindow({ session, apiKey, onBack }) {
   const decodeHtml = (str) => str.replace(/&quot;/g, '"').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>')
