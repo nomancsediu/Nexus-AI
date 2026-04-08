@@ -1,0 +1,19 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+@import "tailwindcss";
+
+* { font-family: 'Inter', sans-serif; }
+
+body {
+  background-color: #0e0e0e;
+  color: #e7e5e4;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+::-webkit-scrollbar { width: 3px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #333; border-radius: 99px; }
+
+tbody tr.hover-row:hover { background: rgba(202,190,255,0.04); }
+tbody tr.hover-row:nth-child(even) { background: rgba(255,255,255,0.02); }
+tbody tr.hover-row:nth-child(even):hover { background: rgba(202,190,255,0.04); }
