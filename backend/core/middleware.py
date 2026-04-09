@@ -8,11 +8,11 @@ class ForceCORSMiddleware:
             response = HttpResponse()
             response['Access-Control-Allow-Origin'] = '*'
             response['Access-Control-Allow-Methods'] = 'GET, POST, PUT, PATCH, DELETE, OPTIONS'
-            response['Access-Control-Allow-Headers'] = 'Accept, Content-Type, Authorization, X-Groq-Api-Key'
+            response['Access-Control-Allow-Headers'] = 'Accept, Content-Type, Authorization, X-Groq-Api-Key, X-Supadata-Api-Key'
             response['Access-Control-Max-Age'] = '86400'
             return response
 
         response = self.get_response(request)
         response['Access-Control-Allow-Origin'] = '*'
-        response['Access-Control-Allow-Headers'] = 'Accept, Content-Type, Authorization, X-Groq-Api-Key'
+        response['Access-Control-Allow-Headers'] = 'Accept, Content-Type, Authorization, X-Groq-Api-Key, X-Supadata-Api-Key'
         return response

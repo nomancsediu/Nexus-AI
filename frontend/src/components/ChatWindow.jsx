@@ -1,12 +1,12 @@
 import { useState, useRef, useEffect } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faTableList, faPaperPlane, faSpinner, faFileText, faXmark, faArrowLeft } from '@fortawesome/free-solid-svg-icons'
+import { faTableList, faPaperPlane, faSpinner, faFileText, faXmark, faArrowLeft, faGear } from '@fortawesome/free-solid-svg-icons'
 import MessageBubble from './MessageBubble'
 import SummaryPanel from './SummaryPanel'
 
 const API = import.meta.env.VITE_API_URL || '/api'
 
-export default function ChatWindow({ session, apiKey, onBack }) {
+export default function ChatWindow({ session, apiKey, onBack, onSettings }) {
   const decodeHtml = (str) => str.replace(/&quot;/g, '"').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>')
 
   const points = (() => {
@@ -28,32 +28,31 @@ export default function ChatWindow({ session, apiKey, onBack }) {
 
   const keyPointsList = points.map(p => `- ${p}`).join('\n')
 
-  const [messages, setMessages] = useState([{
+  const storageKey = `chat_messages_${session.source_url}`
+  const defaultMessages = [{
     role: 'assistant',
     content: `## Topics Covered\n\n${keyPointsList}\n\n---\n\n*Ask me anything about these topics — I can explain, quiz you, or draw diagrams!*`,
-  }])
+  }]
+
+  const [messages, setMessages] = useState(() => {
+    try {
+      const saved = localStorage.getItem(storageKey)
+      return saved ? JSON.parse(saved) : defaultMessages
+    } catch { return defaultMessages }
+  })
   const [input, setInput] = useState('')
   const [streaming, setStreaming] = useState(false)
   const [showSummary, setShowSummary] = useState(false)
   const [showTranscript, setShowTranscript] = useState(false)
-  const [transcript, setTranscript] = useState(null)
-  const [transcriptLoading, setTranscriptLoading] = useState(false)
   const bottomRef = useRef(null)
-
-  const fetchTranscript = async () => {
-    if (transcript) { setShowTranscript(true); return }
-    setTranscriptLoading(true)
-    try {
-      const { data } = await (await import('axios')).default.get(`${API}/learning/sessions/${session.session_id}/`)
-      setTranscript(data.content_source?.transcript || 'No transcript available.')
-      setShowTranscript(true)
-    } catch { setTranscript('Failed to load transcript.') }
-    finally { setTranscriptLoading(false) }
-  }
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
+
+  useEffect(() => {
+    if (!streaming) localStorage.setItem(storageKey, JSON.stringify(messages))
+  }, [messages, streaming])
 
   const sendMessage = async (e) => {
     e.preventDefault()
@@ -68,7 +67,11 @@ export default function ChatWindow({ session, apiKey, onBack }) {
       const response = await fetch(`${API}/content/chat/`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'X-Groq-Api-Key': apiKey },
-        body: JSON.stringify({ session_id: session.session_id, message: userMsg }),
+        body: JSON.stringify({
+          message: userMsg,
+          transcript: session.chat_context || session.transcript,
+          history: messages.filter(m => m.content).map(m => ({ role: m.role, content: m.content })),
+        }),
       })
       if (!response.ok) {
         const err = await response.json().catch(() => ({}))
@@ -118,6 +121,9 @@ export default function ChatWindow({ session, apiKey, onBack }) {
           NEXUS
         </button>
         <div className="flex items-center gap-2">
+          <button onClick={onSettings} className="cursor-pointer hover:opacity-60 transition-opacity" style={{ color: '#555' }}>
+            <FontAwesomeIcon icon={faGear} style={{ fontSize: '14px' }} />
+          </button>
           <button
             onClick={() => setShowSummary(!showSummary)}
             className="flex items-center gap-2 text-xs font-semibold uppercase tracking-widest px-4 py-2 transition-all duration-150 cursor-pointer"
@@ -127,11 +133,11 @@ export default function ChatWindow({ session, apiKey, onBack }) {
             Summary
           </button>
           <button
-            onClick={fetchTranscript}
+            onClick={() => setShowTranscript(true)}
             className="flex items-center gap-2 text-xs font-semibold uppercase tracking-widest px-4 py-2 transition-all duration-150 cursor-pointer"
             style={{ background: showTranscript ? 'rgba(202,190,255,0.1)' : 'transparent', border: `1px solid ${showTranscript ? 'rgba(202,190,255,0.25)' : '#222'}`, color: showTranscript ? '#CABEFF' : '#555', borderRadius: '3px' }}
           >
-            <FontAwesomeIcon icon={transcriptLoading ? faSpinner : faFileText} className={transcriptLoading ? 'animate-spin' : ''} style={{ fontSize: '10px' }} />
+            <FontAwesomeIcon icon={faFileText} style={{ fontSize: '10px' }} />
             Transcript
           </button>
         </div>
@@ -194,8 +200,7 @@ export default function ChatWindow({ session, apiKey, onBack }) {
         )
       }
 
-      {/* Transcript Modal */}
-      {showTranscript && transcript && (
+      {showTranscript && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-6" style={{ background: 'rgba(0,0,0,0.8)' }}>
           <div className="w-full max-w-2xl flex flex-col" style={{ background: '#111', border: '1px solid #1e1e1e', borderRadius: '4px', maxHeight: '80vh' }}>
             <div className="flex items-center justify-between px-6 py-4 shrink-0" style={{ borderBottom: '1px solid #1a1a1a' }}>
@@ -205,7 +210,7 @@ export default function ChatWindow({ session, apiKey, onBack }) {
               </button>
             </div>
             <div className="overflow-y-auto px-6 py-5">
-              <p className="text-sm leading-relaxed whitespace-pre-wrap" style={{ color: '#888' }}>{transcript}</p>
+              <p className="text-sm leading-relaxed whitespace-pre-wrap" style={{ color: '#888' }}>{session.transcript}</p>
             </div>
           </div>
         </div>

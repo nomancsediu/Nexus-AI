@@ -1,15 +1,8 @@
-import ReactMarkdown from 'react-markdown'
-import remarkMath from 'remark-math'
-import remarkGfm from 'remark-gfm'
-import rehypeKatex from 'rehype-katex'
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
 import { oneDark } from 'react-syntax-highlighter/dist/esm/styles/prism'
 import { useState, memo } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCopy, faCheck, faRobot, faUser } from '@fortawesome/free-solid-svg-icons'
-import ChartBlock from './ChartBlock'
-import FlowChart from './FlowChart'
-import 'katex/dist/katex.min.css'
 
 function CopyButton({ text }) {
   const [copied, setCopied] = useState(false)
@@ -33,85 +26,101 @@ function decodeHtml(s) {
     .replace(/&nbsp;/g, ' ')
 }
 
-const MarkdownContent = memo(({ content }) => (
-  <ReactMarkdown
-    remarkPlugins={[remarkMath, remarkGfm]}
-    rehypePlugins={[rehypeKatex]}
-    components={{
-      p: ({ children }) => <div className="mb-3 last:mb-0 leading-relaxed">{children}</div>,
-      strong: ({ children }) => <strong className="font-semibold" style={{ color: '#e7e5e4' }}>{children}</strong>,
-      em: ({ children }) => <em className="italic" style={{ color: '#bbb' }}>{children}</em>,
-      h1: ({ children }) => <h1 className="text-base font-bold mt-5 mb-2 pb-1" style={{ color: '#e7e5e4', borderBottom: '1px solid #1e1e1e' }}>{children}</h1>,
-      h2: ({ children }) => <h2 className="text-sm font-bold mt-4 mb-2" style={{ color: '#e7e5e4' }}>{children}</h2>,
-      h3: ({ children }) => <h3 className="text-sm font-semibold mt-3 mb-1" style={{ color: '#CABEFF' }}>{children}</h3>,
-      ul: ({ children }) => <ul className="space-y-1 my-2 pl-4" style={{ color: '#aaa', listStyleType: 'disc' }}>{children}</ul>,
-      ol: ({ children }) => <ol className="space-y-1 my-2 pl-4" style={{ color: '#aaa', listStyleType: 'decimal' }}>{children}</ol>,
-      li: ({ children }) => <li className="leading-relaxed pl-1">{children}</li>,
-      blockquote: ({ children }) => (
-        <blockquote className="pl-4 my-3 py-2" style={{ borderLeft: '2px solid #CABEFF', color: '#888', background: 'rgba(202,190,255,0.04)', borderRadius: '0 3px 3px 0' }}>{children}</blockquote>
-      ),
-      hr: () => <hr className="my-4" style={{ borderColor: '#1e1e1e' }} />,
-      table: ({ children }) => (
-        <div className="overflow-x-auto my-4" style={{ borderRadius: '4px', border: '1px solid #222' }}>
-          <table className="w-full text-sm border-collapse" style={{ minWidth: '100%' }}>{children}</table>
-        </div>
-      ),
-      thead: ({ children }) => <thead style={{ background: '#1a1035', borderBottom: '2px solid rgba(202,190,255,0.2)' }}>{children}</thead>,
-      tbody: ({ children }) => <tbody>{children}</tbody>,
-      th: ({ children }) => (
-        <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-widest whitespace-nowrap" style={{ color: '#CABEFF' }}>
-          {children}
-        </th>
-      ),
-      td: ({ children }) => (
-        <td className="px-4 py-3 text-xs" style={{ color: '#ccc', borderTop: '1px solid #1e1e1e' }}>{children}</td>
-      ),
-      tr: ({ children }) => <tr className="hover-row">{children}</tr>,
-      code({ inline, className, children }) {
-        const lang = /language-(\w+)/.exec(className || '')?.[1] || ''
-        const codeStr = String(children).replace(/\n$/, '')
-          .replace(/&quot;/g, '"').replace(/&amp;/g, '&')
-          .replace(/&lt;/g, '<').replace(/&gt;/g, '>')
+function parseContent(content) {
+  const parts = []
+  const codeBlockRegex = /```(\w*)\n([\s\S]*?)```/g
+  let last = 0
+  let match
 
-        // inline code
-        if (inline) return (
-          <code className="px-1.5 py-0.5 text-[0.8em] font-mono" style={{ background: 'rgba(202,190,255,0.08)', color: '#CABEFF', border: '1px solid rgba(202,190,255,0.12)', borderRadius: '2px' }}>{children}</code>
-        )
+  while ((match = codeBlockRegex.exec(content)) !== null) {
+    if (match.index > last) {
+      parts.push({ type: 'text', value: content.slice(last, match.index) })
+    }
+    parts.push({ type: 'code', lang: match[1] || 'text', value: match[2] })
+    last = match.index + match[0].length
+  }
 
-        if (lang === 'flowchart') return <FlowChart code={codeStr} />
-        if (lang === 'chart') return <ChartBlock code={codeStr} />
+  if (last < content.length) {
+    parts.push({ type: 'text', value: content.slice(last) })
+  }
 
-        // only render as code block if it has a programming language
-        const programmingLangs = ['js','jsx','ts','tsx','py','python','java','c','cpp','cs','go','rust','ruby','php','swift','kotlin','bash','sh','sql','html','css','json','yaml','xml','r','scala','dart']
-        if (!lang || !programmingLangs.includes(lang.toLowerCase())) {
-          return <span className="whitespace-pre-wrap" style={{ color: '#d4d2d1' }}>{codeStr}</span>
+  return parts
+}
+
+function TextBlock({ text }) {
+  // bold **text**, inline `code`, newlines
+  const lines = text.split('\n')
+  return (
+    <div>
+      {lines.map((line, i) => {
+        if (line.trim() === '' || line.trim() === '---') {
+          return <div key={i} style={{ height: '8px' }} />
         }
 
-        return (
-          <div className="my-3 overflow-hidden" style={{ border: '1px solid #1e1e1e', borderRadius: '3px' }}>
-            <div className="flex items-center justify-between px-4 py-2" style={{ background: '#0a0a0a', borderBottom: '1px solid #1e1e1e' }}>
-              <span className="text-[10px] font-mono uppercase tracking-wider" style={{ color: '#444' }}>{lang}</span>
-              <CopyButton text={codeStr} />
+        const parts = []
+        const regex = /(`[^`]+`|\*\*[^*]+\*\*|\*[^*]+\*)/g
+        let last = 0
+        let m
+
+        while ((m = regex.exec(line)) !== null) {
+          if (m.index > last) parts.push(<span key={last}>{line.slice(last, m.index)}</span>)
+          const raw = m[0]
+          if (raw.startsWith('`')) {
+            parts.push(
+              <code key={m.index} className="px-1.5 py-0.5 text-[0.8em] font-mono" style={{ background: 'rgba(202,190,255,0.08)', color: '#CABEFF', border: '1px solid rgba(202,190,255,0.12)', borderRadius: '2px' }}>
+                {raw.slice(1, -1)}
+              </code>
+            )
+          } else if (raw.startsWith('**')) {
+            parts.push(<strong key={m.index} style={{ color: '#e7e5e4' }}>{raw.slice(2, -2)}</strong>)
+          } else {
+            parts.push(<em key={m.index} style={{ color: '#aaa' }}>{raw.slice(1, -1)}</em>)
+          }
+          last = m.index + raw.length
+        }
+
+        if (last < line.length) parts.push(<span key={last}>{line.slice(last)}</span>)
+
+        const isHeading = line.startsWith('## ') || line.startsWith('### ') || line.startsWith('# ')
+        const isBullet = line.trimStart().startsWith('- ') || line.trimStart().startsWith('* ')
+
+        if (isHeading) {
+          const text = line.replace(/^#+\s/, '')
+          return <div key={i} className="font-bold mt-4 mb-1" style={{ color: '#e7e5e4', fontSize: '0.9rem' }}>{text}</div>
+        }
+
+        if (isBullet) {
+          const bulletText = line.replace(/^\s*[-*]\s+/, '')
+          const bParts = []
+          const bRegex = /(`[^`]+`|\*\*[^*]+\*\*|\*[^*]+\*)/g
+          let bLast = 0, bm
+          while ((bm = bRegex.exec(bulletText)) !== null) {
+            if (bm.index > bLast) bParts.push(<span key={bLast}>{bulletText.slice(bLast, bm.index)}</span>)
+            const r = bm[0]
+            if (r.startsWith('`')) bParts.push(<code key={bm.index} className="px-1.5 py-0.5 text-[0.8em] font-mono" style={{ background: 'rgba(202,190,255,0.08)', color: '#CABEFF', border: '1px solid rgba(202,190,255,0.12)', borderRadius: '2px' }}>{r.slice(1, -1)}</code>)
+            else if (r.startsWith('**')) bParts.push(<strong key={bm.index} style={{ color: '#e7e5e4' }}>{r.slice(2, -2)}</strong>)
+            else bParts.push(<em key={bm.index} style={{ color: '#aaa' }}>{r.slice(1, -1)}</em>)
+            bLast = bm.index + r.length
+          }
+          if (bLast < bulletText.length) bParts.push(<span key={bLast}>{bulletText.slice(bLast)}</span>)
+          return (
+            <div key={i} className="flex gap-2 my-0.5 pl-2">
+              <span style={{ color: '#CABEFF' }}>•</span>
+              <span>{bParts.length ? bParts : bulletText}</span>
             </div>
-            <SyntaxHighlighter
-              language={lang}
-              style={oneDark}
-              customStyle={{ margin: 0, borderRadius: 0, background: '#0a0a0a', fontSize: '0.72rem' }}
-              showLineNumbers={codeStr.split('\n').length > 4}
-            >
-              {codeStr}
-            </SyntaxHighlighter>
-          </div>
-        )
-      },
-    }}
-  >
-    {content}
-  </ReactMarkdown>
-))
+          )
+        }
+
+        return <div key={i} className="my-0.5 leading-relaxed">{parts.length ? parts : line}</div>
+      })}
+    </div>
+  )
+}
 
 const MessageBubble = memo(({ role, content, isStreaming }) => {
   const isUser = role === 'user'
+  const decoded = decodeHtml(content)
+  const parts = isUser ? null : parseContent(decoded)
 
   return (
     <div className={`flex gap-3 ${isUser ? 'flex-row-reverse' : 'flex-row'}`}>
@@ -126,10 +135,32 @@ const MessageBubble = memo(({ role, content, isStreaming }) => {
         className="max-w-[80%] px-4 py-3 text-sm leading-relaxed"
         style={{ background: isUser ? 'rgba(202,190,255,0.07)' : '#111', border: `1px solid ${isUser ? 'rgba(202,190,255,0.15)' : '#1a1a1a'}`, color: '#d4d2d1', borderRadius: '3px' }}
       >
-        {isUser
-          ? <span className="whitespace-pre-wrap">{content}</span>
-          : <MarkdownContent content={decodeHtml(content)} />
-        }
+        {isUser ? (
+          <span className="whitespace-pre-wrap">{content}</span>
+        ) : (
+          <div>
+            {parts.map((part, i) =>
+              part.type === 'code' ? (
+                <div key={i} className="my-3 overflow-hidden" style={{ border: '1px solid #1e1e1e', borderRadius: '3px' }}>
+                  <div className="flex items-center justify-between px-4 py-2" style={{ background: '#0a0a0a', borderBottom: '1px solid #1e1e1e' }}>
+                    <span className="text-[10px] font-mono uppercase tracking-wider" style={{ color: '#444' }}>{part.lang}</span>
+                    <CopyButton text={part.value} />
+                  </div>
+                  <SyntaxHighlighter
+                    language={part.lang || 'text'}
+                    style={oneDark}
+                    customStyle={{ margin: 0, borderRadius: 0, background: '#0a0a0a', fontSize: '0.72rem' }}
+                    showLineNumbers={part.value.split('\n').length > 4}
+                  >
+                    {part.value}
+                  </SyntaxHighlighter>
+                </div>
+              ) : (
+                <TextBlock key={i} text={part.value} />
+              )
+            )}
+          </div>
+        )}
       </div>
     </div>
   )

@@ -2,11 +2,11 @@ import { useState } from 'react'
 import axios from 'axios'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faYoutube } from '@fortawesome/free-brands-svg-icons'
-import { faFileLines, faArrowRight, faSpinner } from '@fortawesome/free-solid-svg-icons'
+import { faFileLines, faArrowRight, faSpinner, faGear } from '@fortawesome/free-solid-svg-icons'
 
 const API = import.meta.env.VITE_API_URL || '/api'
 
-export default function ContentInput({ onProcessed, apiKey }) {
+export default function ContentInput({ onProcessed, apiKey, supadataKey, onSettings, onNeedKeys }) {
   const [sourceType, setSourceType] = useState('youtube')
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
@@ -15,15 +15,26 @@ export default function ContentInput({ onProcessed, apiKey }) {
   const handleSubmit = async (e) => {
     e.preventDefault()
     setError('')
+    if (!apiKey || !supadataKey) { onNeedKeys(); return }
+
+    const sessions = JSON.parse(localStorage.getItem('sessions') || '{}')
+    if (sourceType === 'youtube' && sessions[input]) {
+      const { data } = await axios.post(`${API}/content/process/`, { source_type: 'youtube', source_url: input }, {
+        headers: { 'X-Groq-Api-Key': apiKey, 'X-Supadata-Api-Key': supadataKey },
+      })
+      onProcessed({ ...data, source_url: input })
+      return
+    }
+
     setLoading(true)
     try {
       const payload = sourceType === 'youtube'
         ? { source_type: 'youtube', source_url: input }
         : { source_type: 'text', raw_text: input }
       const { data } = await axios.post(`${API}/content/process/`, payload, {
-        headers: { 'X-Groq-Api-Key': apiKey },
+        headers: { 'X-Groq-Api-Key': apiKey, 'X-Supadata-Api-Key': supadataKey },
       })
-      onProcessed(data)
+      onProcessed({ ...data, source_url: input })
     } catch (err) {
       setError(err.response?.data?.error || 'Something went wrong')
     } finally {
@@ -60,6 +71,9 @@ export default function ContentInput({ onProcessed, apiKey }) {
       {/* Topbar */}
       <header className="flex items-center justify-between shrink-0" style={{ height: '56px', borderBottom: '1px solid #1a1a1a', paddingLeft: '80px', paddingRight: '80px' }}>
         <div className="text-sm font-black tracking-[0.15em] uppercase" style={{ color: '#e7e5e4', letterSpacing: '0.18em' }}>NEXUS</div>
+        <button onClick={onSettings} className="cursor-pointer hover:opacity-60 transition-opacity" style={{ color: '#555' }}>
+          <FontAwesomeIcon icon={faGear} style={{ fontSize: '14px' }} />
+        </button>
       </header>
 
       {/* Content */}
