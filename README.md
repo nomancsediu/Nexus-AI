@@ -5,6 +5,7 @@
 <p><i>Paste a YouTube link or raw text — AI reads it, summarizes it, and answers your questions about it.</i></p>
 
 [![Live Demo](https://img.shields.io/badge/Live%20Demo-nexus.abdnoman.com-00C7B7?style=for-the-badge&logo=netlify&logoColor=white)](https://nexus.abdnoman.com)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge)](LICENSE)
 
 </div>
 
@@ -86,6 +87,26 @@ Built to demonstrate production-grade concepts: streaming HTTP responses, in-mem
 ## Live Demo
 
 > **[nexus.abdnoman.com](https://nexus.abdnoman.com)** — No setup needed. Just bring your own Groq and Supadata API keys.
+
+---
+
+## Contributing
+
+Contributions are welcome! Here's how to get started:
+
+1. Fork the repository
+2. Create a new branch: `git checkout -b feature/your-feature-name`
+3. Make your changes and commit: `git commit -m "feat: describe your change"`
+4. Push to your fork: `git push origin feature/your-feature-name`
+5. Open a Pull Request
+
+Please keep PRs focused and include a clear description of what was changed and why.
+
+---
+
+## License
+
+This project is licensed under the [MIT License](LICENSE) — free to use, modify, and distribute.
 
 ---
 
