@@ -19,9 +19,9 @@ mermaid.initialize({
     secondaryColor: '#1a1a1a',
     tertiaryColor: '#111',
     fontFamily: 'Inter, sans-serif',
-    fontSize: '13px',
+    fontSize: '14px',
   },
-  flowchart: { curve: 'basis', padding: 20 },
+  flowchart: { curve: 'basis', padding: 20, useMaxWidth: true },
   sequence: { actorMargin: 50, useMaxWidth: true },
   gantt: { useMaxWidth: true },
 })
@@ -29,14 +29,13 @@ mermaid.initialize({
 let idCounter = 0
 
 const MermaidDiagram = memo(({ code }) => {
-  const ref = useRef(null)
+  const containerRef = useRef(null)
   const [svg, setSvg] = useState('')
   const [error, setError] = useState('')
 
   useEffect(() => {
     if (!code?.trim()) return
     const id = `mermaid-${++idCounter}`
-    // Decode HTML entities before passing to mermaid
     const decoded = code.trim()
       .replace(/&gt;/g, '>')
       .replace(/&lt;/g, '<')
@@ -44,11 +43,18 @@ const MermaidDiagram = memo(({ code }) => {
       .replace(/&quot;/g, '"')
       .replace(/&#39;/g, "'")
       .replace(/&nbsp;/g, ' ')
-      // Fix arrow syntax: -->|label|> should be -->|label|
-      .replace(/-->/g, '-->')
       .replace(/\|>/g, '|')
+
     mermaid.render(id, decoded)
-      .then(({ svg }) => { setSvg(svg); setError('') })
+      .then(({ svg: renderedSvg }) => {
+        // Force SVG to be fully responsive: remove fixed width/height, set viewBox-based scaling
+        const responsive = renderedSvg
+          .replace(/width="[^"]*"/, 'width="100%"')
+          .replace(/height="[^"]*"/, 'height="auto"')
+          .replace(/style="[^"]*max-width:[^"]*"/, '')
+        setSvg(responsive)
+        setError('')
+      })
       .catch(err => {
         setError('Could not render diagram')
         console.warn('Mermaid error:', err)
@@ -58,26 +64,33 @@ const MermaidDiagram = memo(({ code }) => {
   if (error) return (
     <div className="my-3 px-4 py-3 text-xs" style={{ background: '#0a0a0a', color: '#f87171', border: '1px solid #2a2a2a', borderRadius: '6px' }}>
       ⚠ {error}
-      <pre className="mt-2 text-[10px] opacity-50 whitespace-pre-wrap">{code}</pre>
+      <pre className="mt-2 text-[10px] opacity-50 whitespace-pre-wrap break-all">{code}</pre>
     </div>
   )
 
   if (!svg) return (
     <div className="my-3 flex items-center gap-2 px-4 py-3 text-xs" style={{ color: '#555' }}>
-      <span className="animate-spin inline-block w-3 h-3 border border-t-transparent rounded-full" style={{ borderColor: '#CABEFF', borderTopColor: 'transparent' }} />
+      <span className="animate-spin inline-block w-3 h-3 rounded-full" style={{ border: '1.5px solid #CABEFF', borderTopColor: 'transparent' }} />
       Rendering diagram...
     </div>
   )
 
   return (
     <div
+      ref={containerRef}
       className="my-4 w-full overflow-x-auto"
-      style={{ background: '#0e0e0e', border: '1px solid #2a2a2a', borderRadius: '6px', padding: '16px', WebkitOverflowScrolling: 'touch' }}
+      style={{
+        background: '#0e0e0e',
+        border: '1px solid #2a2a2a',
+        borderRadius: '6px',
+        padding: '16px',
+        WebkitOverflowScrolling: 'touch',
+        boxSizing: 'border-box',
+      }}
     >
+      {/* SVG fills container width on desktop, scrolls on mobile */}
       <div
-        ref={ref}
-        className="flex justify-center"
-        style={{ minWidth: 'fit-content' }}
+        style={{ width: '100%', minWidth: 0 }}
         dangerouslySetInnerHTML={{ __html: svg }}
       />
     </div>

@@ -92,16 +92,20 @@ function renderInline(text) {
 function MarkdownTable({ headers, aligns, dataRows }) {
   if (!headers?.length) return null
   return (
-    <div className="my-4 w-full rounded" style={{ border: '1px solid #2a2a2a', overflowX: 'auto', WebkitOverflowScrolling: 'touch', display: 'block' }}>
-      <table className="border-collapse" style={{ width: '100%', minWidth: 'max-content', tableLayout: 'auto', fontSize: 'clamp(10px, 2vw, 13px)' }}>
+    <div style={{ margin: '16px 0', width: '100%', overflowX: 'auto', WebkitOverflowScrolling: 'touch', display: 'block', borderRadius: '6px', border: '1px solid #2a2a2a' }}>
+      <table style={{ borderCollapse: 'collapse', minWidth: '100%', width: 'max-content', tableLayout: 'auto', fontSize: '12px' }}>
         <thead>
           <tr style={{ background: 'rgba(202,190,255,0.08)', borderBottom: '1px solid #2a2a2a' }}>
             {headers.map((h, i) => (
               <th
                 key={i}
-                className="px-2 sm:px-3 md:px-4 py-2 sm:py-2.5 text-[10px] sm:text-xs font-bold uppercase tracking-wider"
                 style={{
+                  padding: '8px 12px',
                   color: '#CABEFF',
+                  fontWeight: 700,
+                  fontSize: '11px',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.05em',
                   textAlign: aligns[i] || 'left',
                   borderRight: i < headers.length - 1 ? '1px solid #2a2a2a' : 'none',
                   whiteSpace: 'nowrap',
@@ -129,14 +133,18 @@ function MarkdownTable({ headers, aligns, dataRows }) {
                 {cells.map((cell, ci) => (
                   <td
                     key={ci}
-                    className="px-2 sm:px-3 md:px-4 py-2 sm:py-2.5 text-[10px] sm:text-xs"
                     style={{
+                      padding: '7px 12px',
                       color: ci === 0 ? '#d4d2d1' : '#888',
+                      fontSize: '12px',
                       textAlign: aligns[ci] || 'left',
                       borderRight: ci < cells.length - 1 ? '1px solid #1e1e1e' : 'none',
-                      wordBreak: 'break-word',
-                      whiteSpace: 'normal',
+                      whiteSpace: 'nowrap',
+                      maxWidth: '260px',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
                     }}
+                    title={typeof cell === 'string' ? cell : ''}
                   >
                     {renderInline(cell)}
                   </td>
