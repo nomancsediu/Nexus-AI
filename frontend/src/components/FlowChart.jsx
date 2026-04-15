@@ -21,15 +21,15 @@ mermaid.initialize({
     fontFamily: 'Inter, sans-serif',
     fontSize: '14px',
   },
-  flowchart: { curve: 'basis', padding: 20, useMaxWidth: true },
-  sequence: { actorMargin: 50, useMaxWidth: true },
-  gantt: { useMaxWidth: true },
+  flowchart: { curve: 'basis', padding: 20, useMaxWidth: false },
+  sequence: { actorMargin: 50, useMaxWidth: false },
+  gantt: { useMaxWidth: false },
 })
 
 let idCounter = 0
 
 const MermaidDiagram = memo(({ code }) => {
-  const containerRef = useRef(null)
+  const wrapRef = useRef(null)
   const [svg, setSvg] = useState('')
   const [error, setError] = useState('')
 
@@ -46,24 +46,43 @@ const MermaidDiagram = memo(({ code }) => {
       .replace(/\|>/g, '|')
 
     mermaid.render(id, decoded)
-      .then(({ svg: renderedSvg }) => {
-        // Force SVG to be fully responsive: remove fixed width/height, set viewBox-based scaling
-        const responsive = renderedSvg
-          .replace(/width="[^"]*"/, 'width="100%"')
-          .replace(/height="[^"]*"/, 'height="auto"')
-          .replace(/style="[^"]*max-width:[^"]*"/, '')
-        setSvg(responsive)
-        setError('')
-      })
-      .catch(err => {
-        setError('Could not render diagram')
-        console.warn('Mermaid error:', err)
-      })
+      .then(({ svg: raw }) => { setSvg(raw); setError('') })
+      .catch(err => { setError('Could not render diagram'); console.warn('Mermaid:', err) })
   }, [code])
+
+  // After SVG is injected into DOM, fix its dimensions directly
+  useEffect(() => {
+    if (!svg || !wrapRef.current) return
+    const svgEl = wrapRef.current.querySelector('svg')
+    if (!svgEl) return
+
+    // Preserve viewBox for scaling, then let CSS control size
+    const vb = svgEl.getAttribute('viewBox')
+    if (!vb) {
+      const w = svgEl.getAttribute('width') || '800'
+      const h = svgEl.getAttribute('height') || '400'
+      svgEl.setAttribute('viewBox', `0 0 ${parseFloat(w)} ${parseFloat(h)}`)
+    }
+
+    svgEl.setAttribute('width', '100%')
+    svgEl.removeAttribute('height')
+    svgEl.style.width = '100%'
+    svgEl.style.height = 'auto'
+    svgEl.style.display = 'block'
+    svgEl.style.maxWidth = '100%'
+
+    // Fix any foreignObject height="auto" errors
+    svgEl.querySelectorAll('foreignObject').forEach(fo => {
+      const h = fo.getAttribute('height')
+      if (!h || h === 'auto' || isNaN(parseFloat(h))) {
+        fo.setAttribute('height', '40')
+      }
+    })
+  }, [svg])
 
   if (error) return (
     <div className="my-3 px-4 py-3 text-xs" style={{ background: '#0a0a0a', color: '#f87171', border: '1px solid #2a2a2a', borderRadius: '6px' }}>
-      ⚠ {error}
+      ⚠ Could not render diagram
       <pre className="mt-2 text-[10px] opacity-50 whitespace-pre-wrap break-all">{code}</pre>
     </div>
   )
@@ -77,20 +96,12 @@ const MermaidDiagram = memo(({ code }) => {
 
   return (
     <div
-      ref={containerRef}
-      className="my-4 w-full overflow-x-auto"
-      style={{
-        background: '#0e0e0e',
-        border: '1px solid #2a2a2a',
-        borderRadius: '6px',
-        padding: '16px',
-        WebkitOverflowScrolling: 'touch',
-        boxSizing: 'border-box',
-      }}
+      className="my-4 w-full"
+      style={{ background: '#0e0e0e', border: '1px solid #2a2a2a', borderRadius: '6px', padding: '20px', overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}
     >
-      {/* SVG fills container width on desktop, scrolls on mobile */}
       <div
-        style={{ width: '100%', minWidth: 0 }}
+        ref={wrapRef}
+        style={{ width: '100%' }}
         dangerouslySetInnerHTML={{ __html: svg }}
       />
     </div>
