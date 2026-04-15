@@ -52,26 +52,34 @@ const MermaidDiagram = memo(({ code }) => {
   const copyAsImage = () => {
     const svgEl = ref.current?.querySelector('svg')
     if (!svgEl) return
+
+    // Get actual rendered size
+    const bbox = svgEl.getBoundingClientRect()
+    const W = Math.round(bbox.width) || 600
+    const H = Math.round(bbox.height) || 400
+
     const svgData = new XMLSerializer().serializeToString(svgEl)
     const canvas = document.createElement('canvas')
-    canvas.width = 600; canvas.height = 400
+    // 2x for retina sharpness
+    canvas.width = W * 2
+    canvas.height = H * 2
     const ctx = canvas.getContext('2d')
+    ctx.scale(2, 2)
     ctx.fillStyle = '#0d0d1a'
-    ctx.fillRect(0, 0, 600, 400)
+    ctx.fillRect(0, 0, W, H)
     const img = new Image()
     img.onload = () => {
-      ctx.drawImage(img, 0, 0, 600, 400)
+      ctx.drawImage(img, 0, 0, W, H)
       canvas.toBlob(blob => {
         navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })])
           .then(() => { setCopied(true); setTimeout(() => setCopied(false), 2000) })
           .catch(() => {
-            // fallback: download
             const a = document.createElement('a')
             a.href = canvas.toDataURL('image/png')
             a.download = 'diagram.png'
             a.click()
           })
-      })
+      }, 'image/png')
     }
     img.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgData)))
   }

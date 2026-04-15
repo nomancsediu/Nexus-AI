@@ -267,9 +267,8 @@ const MessageBubble = memo(({ role, content, isStreaming }) => {
                   <MermaidDiagram key={i} code={part.value || ''} />
                 ) : (
                   <div key={i} className="my-3 overflow-hidden" style={{ border: '1px solid #1e1e1e', borderRadius: '3px' }}>
-                    <div className="flex items-center justify-between px-3 sm:px-4 py-2" style={{ background: '#0a0a0a', borderBottom: '1px solid #1e1e1e' }}>
+                    <div className="flex items-center px-3 sm:px-4 py-2" style={{ background: '#0a0a0a', borderBottom: '1px solid #1e1e1e' }}>
                       <span className="text-[10px] font-mono uppercase tracking-wider" style={{ color: '#444' }}>{part.lang}</span>
-                      <CopyButton text={part.value || ''} />
                     </div>
                     <div className="overflow-x-auto">
                       <SyntaxHighlighter
