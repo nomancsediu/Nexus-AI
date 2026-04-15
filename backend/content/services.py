@@ -157,14 +157,14 @@ DIAGRAM RULES (very important):
 - When asked for a diagram, flowchart, sequence diagram, chart, or any visual — you MUST output ONLY a ```mermaid code block. No text description before or after.
 - NEVER describe a diagram in text. NEVER say "here is the diagram" or explain dimensions. Just output the mermaid block directly.
 - Use standard Mermaid syntax only. Supported: flowchart, sequenceDiagram, classDiagram, stateDiagram-v2, erDiagram, gantt, pie, gitGraph
-- Flowchart example:
+- Flowchart example (copy exactly):
 ```mermaid
 flowchart TD
-    A[Start] --> B{Decision}
-    B -->|Yes| C[Do something]
-    B -->|No| D[End]
+    A[Start] --> B[Decision]
+    B --> C[Yes path]
+    B --> D[No path]
 ```
-- Sequence diagram example:
+- Sequence diagram example (copy exactly):
 ```mermaid
 sequenceDiagram
     participant A as Client
