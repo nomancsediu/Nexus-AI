@@ -3,6 +3,7 @@ import { oneDark } from 'react-syntax-highlighter/dist/esm/styles/prism'
 import { useState, memo } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCopy, faCheck, faRobot, faUser } from '@fortawesome/free-solid-svg-icons'
+import MermaidDiagram from './FlowChart'
 
 function CopyButton({ text }) {
   const [copied, setCopied] = useState(false)
@@ -61,6 +62,10 @@ function parseSeparatorAligns(sepLine) {
   })
 }
 
+function stripBold(text) {
+  return text ? text.replace(/\*\*(.*?)\*\*/g, '$1').replace(/\*(.*?)\*/g, '$1').trim() : text
+}
+
 function renderInline(text) {
   if (!text) return text
   const parts = []
@@ -87,14 +92,14 @@ function renderInline(text) {
 function MarkdownTable({ headers, aligns, dataRows }) {
   if (!headers?.length) return null
   return (
-    <div className="my-4 w-full overflow-x-auto" style={{ borderRadius: '6px', border: '1px solid #2a2a2a' }}>
-      <table className="text-xs border-collapse" style={{ minWidth: '100%', tableLayout: 'auto' }}>
+    <div className="my-4 w-full rounded" style={{ border: '1px solid #2a2a2a', overflowX: 'auto', WebkitOverflowScrolling: 'touch', display: 'block' }}>
+      <table className="border-collapse" style={{ width: '100%', minWidth: 'max-content', tableLayout: 'auto', fontSize: 'clamp(10px, 2vw, 13px)' }}>
         <thead>
           <tr style={{ background: 'rgba(202,190,255,0.08)', borderBottom: '1px solid #2a2a2a' }}>
             {headers.map((h, i) => (
               <th
                 key={i}
-                className="px-3 sm:px-4 py-2.5 text-xs font-bold uppercase tracking-wider"
+                className="px-2 sm:px-3 md:px-4 py-2 sm:py-2.5 text-[10px] sm:text-xs font-bold uppercase tracking-wider"
                 style={{
                   color: '#CABEFF',
                   textAlign: aligns[i] || 'left',
@@ -102,7 +107,7 @@ function MarkdownTable({ headers, aligns, dataRows }) {
                   whiteSpace: 'nowrap',
                 }}
               >
-                {renderInline(h)}
+                {stripBold(h)}
               </th>
             ))}
           </tr>
@@ -124,13 +129,13 @@ function MarkdownTable({ headers, aligns, dataRows }) {
                 {cells.map((cell, ci) => (
                   <td
                     key={ci}
-                    className="px-3 sm:px-4 py-2.5 text-xs"
+                    className="px-2 sm:px-3 md:px-4 py-2 sm:py-2.5 text-[10px] sm:text-xs"
                     style={{
                       color: ci === 0 ? '#d4d2d1' : '#888',
                       textAlign: aligns[ci] || 'left',
                       borderRight: ci < cells.length - 1 ? '1px solid #1e1e1e' : 'none',
-                      whiteSpace: 'normal',
                       wordBreak: 'break-word',
+                      whiteSpace: 'normal',
                     }}
                   >
                     {renderInline(cell)}
@@ -281,8 +286,15 @@ const MessageBubble = memo(({ role, content, isStreaming }) => {
       </div>
 
       <div
-        className="min-w-0 max-w-[92%] sm:max-w-[85%] md:max-w-[80%] px-3 sm:px-4 py-2.5 sm:py-3 text-xs sm:text-sm leading-relaxed overflow-hidden"
-        style={{ background: isUser ? 'rgba(202,190,255,0.07)' : '#111', border: `1px solid ${isUser ? 'rgba(202,190,255,0.15)' : '#1a1a1a'}`, color: '#d4d2d1', borderRadius: '3px' }}
+        className="min-w-0 px-3 sm:px-4 py-2.5 sm:py-3 text-xs sm:text-sm leading-relaxed"
+        style={{
+          background: isUser ? 'rgba(202,190,255,0.07)' : '#111',
+          border: `1px solid ${isUser ? 'rgba(202,190,255,0.15)' : '#1a1a1a'}`,
+          color: '#d4d2d1',
+          borderRadius: '3px',
+          minWidth: 0,
+          maxWidth: isUser ? '88%' : '100%',
+        }}
       >
         {isUser ? (
           <span className="whitespace-pre-wrap break-words">{content}</span>
@@ -290,6 +302,9 @@ const MessageBubble = memo(({ role, content, isStreaming }) => {
           <div className="min-w-0">
             {parts.map((part, i) =>
               part.type === 'code' ? (
+                part.lang === 'mermaid' ? (
+                  <MermaidDiagram key={i} code={part.value || ''} />
+                ) : (
                 <div key={i} className="my-3 overflow-hidden" style={{ border: '1px solid #1e1e1e', borderRadius: '3px' }}>
                   <div className="flex items-center justify-between px-3 sm:px-4 py-2" style={{ background: '#0a0a0a', borderBottom: '1px solid #1e1e1e' }}>
                     <span className="text-[10px] font-mono uppercase tracking-wider" style={{ color: '#444' }}>{part.lang}</span>
@@ -306,6 +321,7 @@ const MessageBubble = memo(({ role, content, isStreaming }) => {
                     </SyntaxHighlighter>
                   </div>
                 </div>
+                )
               ) : part.type === 'table' ? (
                 <MarkdownTable key={i} headers={part.headers} aligns={part.aligns} dataRows={part.dataRows} />
               ) : (

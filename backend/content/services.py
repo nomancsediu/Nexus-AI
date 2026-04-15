@@ -43,14 +43,18 @@ def _decode_html(s):
 
 
 def fix_flowchart_blocks(text):
+    # Convert any ```flowchart or ```diagram blocks to proper ```mermaid
     def replacer(m):
-        code = m.group(1).strip().replace("'", '"')
+        code = m.group(1).strip()
+        # If it's JSON, skip — not a mermaid diagram
         try:
             json.loads(code)
-        except json.JSONDecodeError:
+            return m.group(0)
+        except (json.JSONDecodeError, ValueError):
             pass
-        return f'```flowchart\n{code}\n```'
-    return re.sub(r'```flowchart\s*\n(.*?)```', replacer, text, flags=re.DOTALL)
+        return f'```mermaid\n{code}\n```'
+    text = re.sub(r'```(?:flowchart|diagram)\s*\n(.*?)```', replacer, text, flags=re.DOTALL)
+    return text
 
 
 def fix_tables(text):
@@ -138,6 +142,28 @@ FORMATTING RULES:
 - Only use triple backtick code blocks when showing multi-line code examples (3+ lines)
 - NEVER use triple backticks for a single word or single line — use inline backtick instead
 - Never wrap short expressions like `spread operator` or `...` in triple backtick blocks
+
+DIAGRAM RULES (very important):
+- When asked for a diagram, flowchart, sequence diagram, or any visual — ALWAYS use a ```mermaid code block
+- Use standard Mermaid syntax only. Supported diagram types: flowchart, sequenceDiagram, classDiagram, stateDiagram-v2, erDiagram, gantt, pie, gitGraph
+- Flowchart example:
+```mermaid
+flowchart TD
+    A[Start] --> B{{Decision}}
+    B -->|Yes| C[Do something]
+    B -->|No| D[End]
+```
+- Sequence diagram example:
+```mermaid
+sequenceDiagram
+    participant A as Client
+    participant B as Server
+    A->>B: Request
+    B-->>A: Response
+```
+- NEVER use JSON for diagrams. NEVER use ```flowchart — always use ```mermaid
+- Keep node labels short (under 30 chars). Avoid special characters in labels.
+- Always start mermaid block with a valid diagram type keyword on the first line
 
 ## Source Content
 {transcript}
