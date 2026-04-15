@@ -201,32 +201,15 @@ function TextBlock({ text }) {
   return <div>{output}</div>
 }
 
-// ── Plain text extractor (for copy) ───────────────────────────────────────────
-
-function extractPlainText(content) {
-  return content
-    .replace(/```[\s\S]*?```/g, '[code block]')
-    .replace(/\*\*(.*?)\*\*/g, '$1')
-    .replace(/\*(.*?)\*/g, '$1')
-    .replace(/`([^`]+)`/g, '$1')
-    .replace(/^#+\s/gm, '')
-    .trim()
-}
-
 // ── MessageBubble ──────────────────────────────────────────────────────────────
 
 const MessageBubble = memo(({ role, content, isStreaming }) => {
   const isUser = role === 'user'
   const decoded = decodeHtml(content || '')
   const parts = isUser ? null : parseContent(decoded)
-  const [showCopy, setShowCopy] = useState(false)
 
   return (
-    <div
-      className={`flex gap-2 sm:gap-3 ${isUser ? 'flex-row-reverse' : 'flex-row'}`}
-      onMouseEnter={() => setShowCopy(true)}
-      onMouseLeave={() => setShowCopy(false)}
-    >
+    <div className={`flex gap-2 sm:gap-3 ${isUser ? 'flex-row-reverse' : 'flex-row'}`}>
       <div
         className="shrink-0 w-6 h-6 sm:w-7 sm:h-7 flex items-center justify-center"
         style={{ background: isUser ? '#CABEFF' : '#161616', border: isUser ? 'none' : '1px solid #1e1e1e', borderRadius: '3px' }}
@@ -244,19 +227,8 @@ const MessageBubble = memo(({ role, content, isStreaming }) => {
           minWidth: 0,
           width: isUser ? 'fit-content' : '100%',
           maxWidth: isUser ? '85%' : '100%',
-          position: 'relative',
         }}
       >
-        {/* Copy text button — top right on hover */}
-        {!isUser && !isStreaming && (
-          <div
-            className="absolute top-2 right-2 transition-opacity duration-150"
-            style={{ opacity: showCopy ? 1 : 0, pointerEvents: showCopy ? 'auto' : 'none' }}
-          >
-            <CopyButton text={extractPlainText(decoded)} label="Copy" />
-          </div>
-        )}
-
         {isUser ? (
           <span className="whitespace-pre-wrap break-words">{content}</span>
         ) : (
