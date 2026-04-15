@@ -91,35 +91,56 @@ function renderInline(text) {
 function MarkdownTable({ headers, aligns, dataRows }) {
   if (!headers?.length) return null
   return (
-    <div style={{ margin: '16px 0', width: '100%', overflowX: 'auto', WebkitOverflowScrolling: 'touch', display: 'block', borderRadius: '6px', border: '1px solid #2a2a2a' }}>
-      <table style={{ borderCollapse: 'collapse', minWidth: '100%', width: 'max-content', tableLayout: 'auto', fontSize: '12px' }}>
-        <thead>
-          <tr style={{ background: 'rgba(202,190,255,0.08)', borderBottom: '1px solid #2a2a2a' }}>
-            {headers.map((h, i) => (
-              <th key={i} style={{ padding: '8px 12px', color: '#CABEFF', fontWeight: 700, fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.05em', textAlign: aligns[i] || 'left', borderRight: i < headers.length - 1 ? '1px solid #2a2a2a' : 'none', whiteSpace: 'nowrap' }}>
-                {stripBold(h)}
-              </th>
+    <div style={{ margin: '16px 0', width: '100%' }}>
+      {/* Desktop: normal table */}
+      <div className="hidden sm:block" style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch', borderRadius: '6px', border: '1px solid #2a2a2a' }}>
+        <table style={{ borderCollapse: 'collapse', minWidth: '100%', width: 'max-content', tableLayout: 'auto', fontSize: '12px' }}>
+          <thead>
+            <tr style={{ background: 'rgba(202,190,255,0.08)', borderBottom: '1px solid #2a2a2a' }}>
+              {headers.map((h, i) => (
+                <th key={i} style={{ padding: '8px 12px', color: '#CABEFF', fontWeight: 700, fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.05em', textAlign: aligns[i] || 'left', borderRight: i < headers.length - 1 ? '1px solid #2a2a2a' : 'none', whiteSpace: 'nowrap' }}>
+                  {stripBold(h)}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {dataRows.map((cells, ri) => {
+              const isEven = ri % 2 === 1
+              return (
+                <tr key={ri} style={{ background: isEven ? 'rgba(255,255,255,0.02)' : 'transparent', borderBottom: ri < dataRows.length - 1 ? '1px solid #1e1e1e' : 'none', transition: 'background 0.15s' }}
+                  onMouseEnter={e => e.currentTarget.style.background = 'rgba(202,190,255,0.05)'}
+                  onMouseLeave={e => e.currentTarget.style.background = isEven ? 'rgba(255,255,255,0.02)' : 'transparent'}
+                >
+                  {cells.map((cell, ci) => (
+                    <td key={ci} style={{ padding: '7px 12px', color: ci === 0 ? '#d4d2d1' : '#888', fontSize: '12px', textAlign: aligns[ci] || 'left', borderRight: ci < cells.length - 1 ? '1px solid #1e1e1e' : 'none', whiteSpace: 'nowrap', maxWidth: '260px', overflow: 'hidden', textOverflow: 'ellipsis' }} title={typeof cell === 'string' ? cell : ''}>
+                      {renderInline(cell)}
+                    </td>
+                  ))}
+                </tr>
+              )
+            })}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Mobile: card layout — no scroll needed */}
+      <div className="sm:hidden flex flex-col gap-2">
+        {dataRows.map((cells, ri) => (
+          <div key={ri} style={{ background: '#161616', border: '1px solid #1e1e1e', borderRadius: '6px', padding: '10px 12px' }}>
+            {headers.map((header, ci) => (
+              <div key={ci} className="flex justify-between items-start gap-3 py-1" style={{ borderBottom: ci < headers.length - 1 ? '1px solid #1a1a1a' : 'none' }}>
+                <span style={{ color: '#CABEFF', fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap', flexShrink: 0 }}>
+                  {stripBold(header)}
+                </span>
+                <span style={{ color: '#d4d2d1', fontSize: '11px', textAlign: 'right', wordBreak: 'break-word' }}>
+                  {renderInline(cells[ci] || '—')}
+                </span>
+              </div>
             ))}
-          </tr>
-        </thead>
-        <tbody>
-          {dataRows.map((cells, ri) => {
-            const isEven = ri % 2 === 1
-            return (
-              <tr key={ri} style={{ background: isEven ? 'rgba(255,255,255,0.02)' : 'transparent', borderBottom: ri < dataRows.length - 1 ? '1px solid #1e1e1e' : 'none', transition: 'background 0.15s' }}
-                onMouseEnter={e => e.currentTarget.style.background = 'rgba(202,190,255,0.05)'}
-                onMouseLeave={e => e.currentTarget.style.background = isEven ? 'rgba(255,255,255,0.02)' : 'transparent'}
-              >
-                {cells.map((cell, ci) => (
-                  <td key={ci} style={{ padding: '7px 12px', color: ci === 0 ? '#d4d2d1' : '#888', fontSize: '12px', textAlign: aligns[ci] || 'left', borderRight: ci < cells.length - 1 ? '1px solid #1e1e1e' : 'none', whiteSpace: 'nowrap', maxWidth: '260px', overflow: 'hidden', textOverflow: 'ellipsis' }} title={typeof cell === 'string' ? cell : ''}>
-                    {renderInline(cell)}
-                  </td>
-                ))}
-              </tr>
-            )
-          })}
-        </tbody>
-      </table>
+          </div>
+        ))}
+      </div>
     </div>
   )
 }
