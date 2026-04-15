@@ -156,12 +156,6 @@ const MermaidDiagram = memo(({ code }) => {
         textAlign: 'left',
       }}
     >
-      {!rendered && (
-        <div className="flex items-center justify-center gap-2 text-xs" style={{ color: '#555' }}>
-          <span className="animate-spin inline-block w-3 h-3 rounded-full" style={{ border: '1.5px solid #CABEFF', borderTopColor: 'transparent' }} />
-          Rendering diagram...
-        </div>
-      )}
       {rendered && (
         <div className="flex justify-end mb-2">
           <button
