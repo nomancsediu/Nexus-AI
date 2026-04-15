@@ -73,7 +73,7 @@ const MermaidDiagram = memo(({ code }) => {
 
           svgEl.removeAttribute('width')
           svgEl.removeAttribute('height')
-          svgEl.style.cssText = 'width:100%;height:auto;display:block;min-width:0;'
+          svgEl.style.cssText = 'width:600px;height:400px;display:block;max-width:100%;'
 
           // Fix foreignObject height errors
           svgEl.querySelectorAll('foreignObject').forEach(fo => {
@@ -112,7 +112,8 @@ const MermaidDiagram = memo(({ code }) => {
         overflowX: 'auto',
         WebkitOverflowScrolling: 'touch',
         boxSizing: 'border-box',
-        maxWidth: '520px',
+        maxWidth: '640px',
+        width: '100%',
       }}
     >
       {!rendered && (
@@ -123,7 +124,7 @@ const MermaidDiagram = memo(({ code }) => {
       )}
       <div
         ref={ref}
-        style={{ width: '100%', minWidth: '280px', display: rendered ? 'block' : 'none' }}
+        style={{ display: rendered ? 'block' : 'none' }}
       />
     </div>
   )
