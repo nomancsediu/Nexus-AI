@@ -115,30 +115,38 @@ export default function ChatWindow({ session, apiKey, onBack, onSettings }) {
     <div className="flex flex-col h-full" style={{ background: '#0e0e0e' }}>
 
       {/* Header */}
-      <div className="flex items-center justify-between shrink-0" style={{ height: '56px', background: '#111', borderBottom: '1px solid #1a1a1a', paddingLeft: '80px', paddingRight: '80px' }}>
-        <button onClick={onBack} className="flex items-center gap-2 text-xs font-semibold uppercase tracking-widest cursor-pointer transition-opacity hover:opacity-60" style={{ color: '#CABEFF' }}>
+      <div
+        className="flex items-center justify-between shrink-0 px-4 sm:px-8 md:px-14 lg:px-20"
+        style={{ height: '56px', background: '#111', borderBottom: '1px solid #1a1a1a' }}
+      >
+        <button
+          onClick={onBack}
+          className="flex items-center gap-2 text-xs font-semibold uppercase tracking-widest cursor-pointer transition-opacity hover:opacity-60"
+          style={{ color: '#CABEFF' }}
+        >
           <FontAwesomeIcon icon={faArrowLeft} style={{ fontSize: '10px' }} />
           NEXUS
         </button>
-        <div className="flex items-center gap-2">
-          <button onClick={onSettings} className="cursor-pointer hover:opacity-60 transition-opacity" style={{ color: '#555' }}>
+
+        <div className="flex items-center gap-1 sm:gap-2">
+          <button onClick={onSettings} className="cursor-pointer hover:opacity-60 transition-opacity p-1" style={{ color: '#555' }}>
             <FontAwesomeIcon icon={faGear} style={{ fontSize: '14px' }} />
           </button>
           <button
             onClick={() => setShowSummary(!showSummary)}
-            className="flex items-center gap-2 text-xs font-semibold uppercase tracking-widest px-4 py-2 transition-all duration-150 cursor-pointer"
+            className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-widest px-2 sm:px-3 md:px-4 py-2 transition-all duration-150 cursor-pointer"
             style={{ background: showSummary ? 'rgba(202,190,255,0.1)' : 'transparent', border: `1px solid ${showSummary ? 'rgba(202,190,255,0.25)' : '#222'}`, color: showSummary ? '#CABEFF' : '#555', borderRadius: '3px' }}
           >
             <FontAwesomeIcon icon={faTableList} style={{ fontSize: '10px' }} />
-            Summary
+            <span className="hidden sm:inline">Summary</span>
           </button>
           <button
             onClick={() => setShowTranscript(true)}
-            className="flex items-center gap-2 text-xs font-semibold uppercase tracking-widest px-4 py-2 transition-all duration-150 cursor-pointer"
+            className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-widest px-2 sm:px-3 md:px-4 py-2 transition-all duration-150 cursor-pointer"
             style={{ background: showTranscript ? 'rgba(202,190,255,0.1)' : 'transparent', border: `1px solid ${showTranscript ? 'rgba(202,190,255,0.25)' : '#222'}`, color: showTranscript ? '#CABEFF' : '#555', borderRadius: '3px' }}
           >
             <FontAwesomeIcon icon={faFileText} style={{ fontSize: '10px' }} />
-            Transcript
+            <span className="hidden sm:inline">Transcript</span>
           </button>
         </div>
       </div>
@@ -149,7 +157,7 @@ export default function ChatWindow({ session, apiKey, onBack, onSettings }) {
         : (
           <>
             {/* Messages */}
-            <div className="flex-1 overflow-y-auto px-8 py-8 space-y-6">
+            <div className="flex-1 overflow-y-auto px-3 sm:px-6 md:px-10 lg:px-16 py-4 sm:py-6 md:py-8 space-y-4 sm:space-y-6">
               {messages.map((msg, i) => (
                 <MessageBubble
                   key={i}
@@ -169,8 +177,8 @@ export default function ChatWindow({ session, apiKey, onBack, onSettings }) {
             </div>
 
             {/* Input */}
-            <div className="px-8 py-5 shrink-0" style={{ background: '#111', borderTop: '1px solid #1a1a1a' }}>
-              <form onSubmit={sendMessage} className="flex gap-3 items-end">
+            <div className="px-3 sm:px-6 md:px-10 lg:px-16 py-3 sm:py-4 md:py-5 shrink-0" style={{ background: '#111', borderTop: '1px solid #1a1a1a' }}>
+              <form onSubmit={sendMessage} className="flex gap-2 sm:gap-3 items-end">
                 <div className="flex-1 relative">
                   <textarea
                     value={input}
@@ -188,7 +196,7 @@ export default function ChatWindow({ session, apiKey, onBack, onSettings }) {
                 <button
                   type="submit"
                   disabled={streaming || !input.trim()}
-                  className="flex items-center justify-center w-9 h-9 transition-all duration-150 cursor-pointer disabled:opacity-30 hover:opacity-85 active:scale-95 shrink-0 mb-3"
+                  className="flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 transition-all duration-150 cursor-pointer disabled:opacity-30 hover:opacity-85 active:scale-95 shrink-0 mb-3"
                   style={{ background: '#CABEFF', color: '#2a00a0', borderRadius: '3px' }}
                 >
                   <FontAwesomeIcon icon={streaming ? faSpinner : faPaperPlane} className={streaming ? 'animate-spin' : ''} style={{ fontSize: '12px' }} />
@@ -200,16 +208,20 @@ export default function ChatWindow({ session, apiKey, onBack, onSettings }) {
         )
       }
 
+      {/* Transcript modal */}
       {showTranscript && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-6" style={{ background: 'rgba(0,0,0,0.8)' }}>
-          <div className="w-full max-w-2xl flex flex-col" style={{ background: '#111', border: '1px solid #1e1e1e', borderRadius: '4px', maxHeight: '80vh' }}>
-            <div className="flex items-center justify-between px-6 py-4 shrink-0" style={{ borderBottom: '1px solid #1a1a1a' }}>
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4 md:p-6" style={{ background: 'rgba(0,0,0,0.85)' }}>
+          <div
+            className="w-full sm:max-w-2xl flex flex-col"
+            style={{ background: '#111', border: '1px solid #1e1e1e', borderRadius: '4px 4px 0 0', maxHeight: '85vh', ...(window.innerWidth >= 640 && { borderRadius: '4px', maxHeight: '80vh' }) }}
+          >
+            <div className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 shrink-0" style={{ borderBottom: '1px solid #1a1a1a' }}>
               <span className="text-xs font-bold uppercase tracking-widest" style={{ color: '#CABEFF' }}>Full Transcript</span>
-              <button onClick={() => setShowTranscript(false)} className="cursor-pointer transition-opacity hover:opacity-60" style={{ color: '#555' }}>
+              <button onClick={() => setShowTranscript(false)} className="cursor-pointer transition-opacity hover:opacity-60 p-1" style={{ color: '#555' }}>
                 <FontAwesomeIcon icon={faXmark} />
               </button>
             </div>
-            <div className="overflow-y-auto px-6 py-5">
+            <div className="overflow-y-auto px-4 sm:px-6 py-4 sm:py-5">
               <p className="text-sm leading-relaxed whitespace-pre-wrap" style={{ color: '#888' }}>{session.transcript}</p>
             </div>
           </div>

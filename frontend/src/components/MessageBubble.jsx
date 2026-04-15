@@ -48,7 +48,6 @@ function parseContent(content) {
 }
 
 function TextBlock({ text }) {
-  // bold **text**, inline `code`, newlines
   const lines = text.split('\n')
   return (
     <div>
@@ -67,7 +66,7 @@ function TextBlock({ text }) {
           const raw = m[0]
           if (raw.startsWith('`')) {
             parts.push(
-              <code key={m.index} className="px-1.5 py-0.5 text-[0.8em] font-mono" style={{ background: 'rgba(202,190,255,0.08)', color: '#CABEFF', border: '1px solid rgba(202,190,255,0.12)', borderRadius: '2px' }}>
+              <code key={m.index} className="px-1.5 py-0.5 text-[0.8em] font-mono break-all" style={{ background: 'rgba(202,190,255,0.08)', color: '#CABEFF', border: '1px solid rgba(202,190,255,0.12)', borderRadius: '2px' }}>
                 {raw.slice(1, -1)}
               </code>
             )
@@ -97,7 +96,7 @@ function TextBlock({ text }) {
           while ((bm = bRegex.exec(bulletText)) !== null) {
             if (bm.index > bLast) bParts.push(<span key={bLast}>{bulletText.slice(bLast, bm.index)}</span>)
             const r = bm[0]
-            if (r.startsWith('`')) bParts.push(<code key={bm.index} className="px-1.5 py-0.5 text-[0.8em] font-mono" style={{ background: 'rgba(202,190,255,0.08)', color: '#CABEFF', border: '1px solid rgba(202,190,255,0.12)', borderRadius: '2px' }}>{r.slice(1, -1)}</code>)
+            if (r.startsWith('`')) bParts.push(<code key={bm.index} className="px-1.5 py-0.5 text-[0.8em] font-mono break-all" style={{ background: 'rgba(202,190,255,0.08)', color: '#CABEFF', border: '1px solid rgba(202,190,255,0.12)', borderRadius: '2px' }}>{r.slice(1, -1)}</code>)
             else if (r.startsWith('**')) bParts.push(<strong key={bm.index} style={{ color: '#e7e5e4' }}>{r.slice(2, -2)}</strong>)
             else bParts.push(<em key={bm.index} style={{ color: '#aaa' }}>{r.slice(1, -1)}</em>)
             bLast = bm.index + r.length
@@ -106,12 +105,12 @@ function TextBlock({ text }) {
           return (
             <div key={i} className="flex gap-2 my-0.5 pl-2">
               <span style={{ color: '#CABEFF' }}>•</span>
-              <span>{bParts.length ? bParts : bulletText}</span>
+              <span className="min-w-0 break-words">{bParts.length ? bParts : bulletText}</span>
             </div>
           )
         }
 
-        return <div key={i} className="my-0.5 leading-relaxed">{parts.length ? parts : line}</div>
+        return <div key={i} className="my-0.5 leading-relaxed break-words">{parts.length ? parts : line}</div>
       })}
     </div>
   )
@@ -123,37 +122,39 @@ const MessageBubble = memo(({ role, content, isStreaming }) => {
   const parts = isUser ? null : parseContent(decoded)
 
   return (
-    <div className={`flex gap-3 ${isUser ? 'flex-row-reverse' : 'flex-row'}`}>
+    <div className={`flex gap-2 sm:gap-3 ${isUser ? 'flex-row-reverse' : 'flex-row'}`}>
       <div
-        className="shrink-0 w-7 h-7 flex items-center justify-center"
-        style={{ background: isUser ? '#CABEFF' : '#161616', border: isUser ? 'none' : '1px solid #1e1e1e', borderRadius: '3px', flexShrink: 0 }}
+        className="shrink-0 w-6 h-6 sm:w-7 sm:h-7 flex items-center justify-center"
+        style={{ background: isUser ? '#CABEFF' : '#161616', border: isUser ? 'none' : '1px solid #1e1e1e', borderRadius: '3px' }}
       >
-        <FontAwesomeIcon icon={isUser ? faUser : faRobot} style={{ fontSize: '11px', color: isUser ? '#2a00a0' : '#CABEFF' }} />
+        <FontAwesomeIcon icon={isUser ? faUser : faRobot} style={{ fontSize: '10px', color: isUser ? '#2a00a0' : '#CABEFF' }} />
       </div>
 
       <div
-        className="max-w-[80%] px-4 py-3 text-sm leading-relaxed"
+        className="min-w-0 max-w-[88%] sm:max-w-[82%] md:max-w-[78%] px-3 sm:px-4 py-2.5 sm:py-3 text-xs sm:text-sm leading-relaxed overflow-hidden"
         style={{ background: isUser ? 'rgba(202,190,255,0.07)' : '#111', border: `1px solid ${isUser ? 'rgba(202,190,255,0.15)' : '#1a1a1a'}`, color: '#d4d2d1', borderRadius: '3px' }}
       >
         {isUser ? (
-          <span className="whitespace-pre-wrap">{content}</span>
+          <span className="whitespace-pre-wrap break-words">{content}</span>
         ) : (
-          <div>
+          <div className="min-w-0">
             {parts.map((part, i) =>
               part.type === 'code' ? (
                 <div key={i} className="my-3 overflow-hidden" style={{ border: '1px solid #1e1e1e', borderRadius: '3px' }}>
-                  <div className="flex items-center justify-between px-4 py-2" style={{ background: '#0a0a0a', borderBottom: '1px solid #1e1e1e' }}>
+                  <div className="flex items-center justify-between px-3 sm:px-4 py-2" style={{ background: '#0a0a0a', borderBottom: '1px solid #1e1e1e' }}>
                     <span className="text-[10px] font-mono uppercase tracking-wider" style={{ color: '#444' }}>{part.lang}</span>
                     <CopyButton text={part.value} />
                   </div>
-                  <SyntaxHighlighter
-                    language={part.lang || 'text'}
-                    style={oneDark}
-                    customStyle={{ margin: 0, borderRadius: 0, background: '#0a0a0a', fontSize: '0.72rem' }}
-                    showLineNumbers={part.value.split('\n').length > 4}
-                  >
-                    {part.value}
-                  </SyntaxHighlighter>
+                  <div className="overflow-x-auto">
+                    <SyntaxHighlighter
+                      language={part.lang || 'text'}
+                      style={oneDark}
+                      customStyle={{ margin: 0, borderRadius: 0, background: '#0a0a0a', fontSize: '0.7rem' }}
+                      showLineNumbers={part.value.split('\n').length > 4}
+                    >
+                      {part.value}
+                    </SyntaxHighlighter>
+                  </div>
                 </div>
               ) : (
                 <TextBlock key={i} text={part.value} />

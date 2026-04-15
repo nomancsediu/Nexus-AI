@@ -19,20 +19,25 @@ export default function ApiKeyModal({ onSave, onClose, initialGroq = '', initial
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: '#0e0e0e' }}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center px-4 sm:px-6" style={{ background: '#0e0e0e' }}>
       {onClose && (
-        <button onClick={onClose} className="absolute top-6 right-8 cursor-pointer hover:opacity-60 transition-opacity" style={{ color: '#555', fontSize: '18px' }}>✕</button>
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 sm:top-6 sm:right-8 cursor-pointer hover:opacity-60 transition-opacity p-1"
+          style={{ color: '#555', fontSize: '18px' }}
+        >✕</button>
       )}
-      <div className="w-full max-w-md px-8">
-        <div className="mb-10">
-          <div className="w-10 h-10 flex items-center justify-center mb-6" style={{ background: 'rgba(202,190,255,0.1)', border: '1px solid rgba(202,190,255,0.2)', borderRadius: '3px' }}>
+
+      <div className="w-full max-w-sm sm:max-w-md">
+        <div className="mb-8 sm:mb-10">
+          <div className="w-10 h-10 flex items-center justify-center mb-5 sm:mb-6" style={{ background: 'rgba(202,190,255,0.1)', border: '1px solid rgba(202,190,255,0.2)', borderRadius: '3px' }}>
             <FontAwesomeIcon icon={faKey} style={{ color: '#CABEFF', fontSize: '16px' }} />
           </div>
-          <h1 className="text-2xl font-bold tracking-tight mb-2" style={{ color: '#e7e5e4' }}>API Keys</h1>
-          <p className="text-sm leading-relaxed" style={{ color: '#555' }}>Keys are stored locally and never sent to any server other than their respective services.</p>
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight mb-2" style={{ color: '#e7e5e4' }}>API Keys</h1>
+          <p className="text-xs sm:text-sm leading-relaxed" style={{ color: '#555' }}>Keys are stored locally and never sent to any server other than their respective services.</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-8">
+        <form onSubmit={handleSubmit} className="space-y-6 sm:space-y-8">
           {[{
             label: 'Groq API Key',
             value: groqKey, setValue: setGroqKey,
@@ -62,7 +67,7 @@ export default function ApiKeyModal({ onSave, onClose, initialGroq = '', initial
                   onFocus={e => e.target.style.borderBottomColor = '#CABEFF'}
                   onBlur={e => e.target.style.borderBottomColor = value ? '#CABEFF' : '#2a2a2a'}
                 />
-                <button type="button" onClick={() => setShow(!show)} className="absolute right-0 bottom-3 cursor-pointer hover:opacity-60" style={{ color: '#555' }}>
+                <button type="button" onClick={() => setShow(!show)} className="absolute right-0 bottom-3 cursor-pointer hover:opacity-60 p-1" style={{ color: '#555' }}>
                   <FontAwesomeIcon icon={show ? faEyeSlash : faEye} style={{ fontSize: '13px' }} />
                 </button>
               </div>
@@ -74,13 +79,14 @@ export default function ApiKeyModal({ onSave, onClose, initialGroq = '', initial
           <button
             type="submit"
             disabled={!groqKey.trim() || !supadataKey.trim()}
-            className="flex items-center gap-3 px-8 py-3 text-xs font-bold uppercase tracking-widest transition-all duration-150 cursor-pointer disabled:opacity-30 hover:opacity-90 active:scale-[0.98]"
+            className="flex items-center gap-3 px-6 sm:px-8 py-3 text-xs font-bold uppercase tracking-widest transition-all duration-150 cursor-pointer disabled:opacity-30 hover:opacity-90 active:scale-[0.98]"
             style={{ background: '#CABEFF', color: '#2a00a0', borderRadius: '3px' }}
           >
             Save <FontAwesomeIcon icon={faArrowRight} style={{ fontSize: '11px' }} />
           </button>
         </form>
       </div>
+
       <div className="fixed inset-0 pointer-events-none -z-10">
         <div style={{ position: 'absolute', top: '-10%', right: '-10%', width: '50%', height: '50%', background: 'radial-gradient(circle, rgba(202,190,255,0.05) 0%, transparent 70%)', filter: 'blur(60px)' }} />
       </div>

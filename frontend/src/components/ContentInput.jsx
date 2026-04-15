@@ -43,8 +43,8 @@ export default function ContentInput({ onProcessed, apiKey, supadataKey, onSetti
   }
 
   if (loading) return (
-    <div className="flex-1 flex flex-col items-center justify-center gap-6" style={{ background: '#0e0e0e' }}>
-      <div className="flex flex-col items-center gap-5 max-w-sm text-center">
+    <div className="flex-1 flex flex-col items-center justify-center gap-6 px-4" style={{ background: '#0e0e0e' }}>
+      <div className="flex flex-col items-center gap-5 w-full max-w-xs text-center">
         <div className="flex items-center gap-1.5">
           {[0, 150, 300].map(delay => (
             <span key={delay} className="rounded-full animate-bounce" style={{ width: '6px', height: '6px', background: '#CABEFF', animationDelay: `${delay}ms`, display: 'inline-block' }} />
@@ -69,28 +69,31 @@ export default function ContentInput({ onProcessed, apiKey, supadataKey, onSetti
     <div className="flex-1 flex flex-col overflow-hidden" style={{ background: '#0e0e0e' }}>
 
       {/* Topbar */}
-      <header className="flex items-center justify-between shrink-0" style={{ height: '56px', borderBottom: '1px solid #1a1a1a', paddingLeft: '80px', paddingRight: '80px' }}>
+      <header className="flex items-center justify-between shrink-0 px-4 sm:px-8 md:px-14 lg:px-20" style={{ height: '56px', borderBottom: '1px solid #1a1a1a' }}>
         <div className="text-sm font-black tracking-[0.15em] uppercase" style={{ color: '#e7e5e4', letterSpacing: '0.18em' }}>NEXUS</div>
-        <button onClick={onSettings} className="cursor-pointer hover:opacity-60 transition-opacity" style={{ color: '#555' }}>
+        <button onClick={onSettings} className="cursor-pointer hover:opacity-60 transition-opacity p-1" style={{ color: '#555' }}>
           <FontAwesomeIcon icon={faGear} style={{ fontSize: '14px' }} />
         </button>
       </header>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto flex flex-col justify-center py-12" style={{ paddingLeft: '80px', paddingRight: '80px' }}>
-        <div className="max-w-2xl">
+      <div className="flex-1 overflow-y-auto flex flex-col justify-center py-8 sm:py-10 px-4 sm:px-8 md:px-14 lg:px-20">
+        <div className="w-full max-w-2xl">
 
           {/* Headline */}
-          <div className="mb-14">
-            <p className="text-xs uppercase tracking-[0.3em] mb-6 font-medium" style={{ color: '#555' }}>AI-Powered Learning</p>
-            <h1 style={{ fontSize: '3.25rem', lineHeight: 1.08, fontWeight: 800, letterSpacing: '-0.03em', color: '#e7e5e4' }}>
+          <div className="mb-8 sm:mb-12 md:mb-14">
+            <p className="text-xs uppercase tracking-[0.3em] mb-4 sm:mb-6 font-medium" style={{ color: '#555' }}>AI-Powered Learning</p>
+            <h1
+              className="text-3xl sm:text-4xl md:text-5xl lg:text-[3.25rem]"
+              style={{ lineHeight: 1.08, fontWeight: 800, letterSpacing: '-0.03em', color: '#e7e5e4' }}
+            >
               What do you want<br />
               to <span style={{ color: '#CABEFF' }}>learn</span> today?
             </h1>
           </div>
 
           {/* Tabs */}
-          <div className="flex gap-1 mb-8 p-1 w-fit" style={{ background: '#161616', borderRadius: '4px', border: '1px solid #1e1e1e' }}>
+          <div className="flex gap-1 mb-6 sm:mb-8 p-1 w-fit" style={{ background: '#161616', borderRadius: '4px', border: '1px solid #1e1e1e' }}>
             {[
               { type: 'youtube', label: 'YouTube URL', icon: faYoutube },
               { type: 'text', label: 'Text / Article', icon: faFileLines },
@@ -98,7 +101,7 @@ export default function ContentInput({ onProcessed, apiKey, supadataKey, onSetti
               <button
                 key={type}
                 onClick={() => { setSourceType(type); setInput('') }}
-                className="flex items-center gap-2 px-4 py-2 text-xs font-semibold transition-all duration-200 cursor-pointer"
+                className="flex items-center gap-2 px-3 sm:px-4 py-2 text-xs font-semibold transition-all duration-200 cursor-pointer"
                 style={{
                   background: sourceType === type ? '#CABEFF' : 'transparent',
                   color: sourceType === type ? '#2a00a0' : '#555',
@@ -106,21 +109,21 @@ export default function ContentInput({ onProcessed, apiKey, supadataKey, onSetti
                 }}
               >
                 <FontAwesomeIcon icon={icon} style={{ fontSize: '11px' }} />
-                {label}
+                <span className="hidden xs:inline sm:inline">{label}</span>
               </button>
             ))}
           </div>
 
           {/* Form */}
           <form onSubmit={handleSubmit}>
-            <div className="relative mb-6">
+            <div className="relative mb-5 sm:mb-6">
               {sourceType === 'youtube' ? (
                 <input
                   type="url"
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   placeholder="Enter YouTube URL..."
-                  className="w-full bg-transparent text-xl font-light focus:outline-none transition-all duration-300 pb-4"
+                  className="w-full bg-transparent text-base sm:text-lg md:text-xl font-light focus:outline-none transition-all duration-300 pb-4"
                   style={{
                     borderBottom: `1.5px solid ${input ? '#CABEFF' : '#2a2a2a'}`,
                     color: '#e7e5e4',
@@ -135,8 +138,8 @@ export default function ContentInput({ onProcessed, apiKey, supadataKey, onSetti
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   placeholder="Paste your article, blog post, or any text here..."
-                  rows={5}
-                  className="w-full bg-transparent text-base font-light focus:outline-none transition-all duration-300 pb-4 resize-none"
+                  rows={4}
+                  className="w-full bg-transparent text-sm sm:text-base font-light focus:outline-none transition-all duration-300 pb-4 resize-none"
                   style={{
                     borderBottom: `1.5px solid ${input ? '#CABEFF' : '#2a2a2a'}`,
                     color: '#e7e5e4',
@@ -147,12 +150,11 @@ export default function ContentInput({ onProcessed, apiKey, supadataKey, onSetti
                   required
                 />
               )}
-              {/* placeholder color override */}
               <style>{`input::placeholder, textarea::placeholder { color: #333; }`}</style>
             </div>
 
             {error && (
-              <div className="mb-6 px-4 py-3 text-xs" style={{ background: 'rgba(232,133,106,0.08)', border: '1px solid rgba(232,133,106,0.2)', color: '#e8856a', borderRadius: '3px' }}>
+              <div className="mb-5 sm:mb-6 px-4 py-3 text-xs" style={{ background: 'rgba(232,133,106,0.08)', border: '1px solid rgba(232,133,106,0.2)', color: '#e8856a', borderRadius: '3px' }}>
                 {error}
               </div>
             )}
@@ -160,7 +162,7 @@ export default function ContentInput({ onProcessed, apiKey, supadataKey, onSetti
             <button
               type="submit"
               disabled={loading || !input.trim()}
-              className="flex items-center gap-3 px-8 py-3.5 text-sm font-bold uppercase tracking-widest transition-all duration-200 cursor-pointer disabled:opacity-40 hover:opacity-90 active:scale-[0.98]"
+              className="flex items-center gap-3 px-6 sm:px-8 py-3 sm:py-3.5 text-xs sm:text-sm font-bold uppercase tracking-widest transition-all duration-200 cursor-pointer disabled:opacity-40 hover:opacity-90 active:scale-[0.98]"
               style={{ background: '#CABEFF', color: '#2a00a0', borderRadius: '3px' }}
             >
               {loading ? (
@@ -176,7 +178,6 @@ export default function ContentInput({ onProcessed, apiKey, supadataKey, onSetti
               )}
             </button>
           </form>
-
 
         </div>
       </div>
