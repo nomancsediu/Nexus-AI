@@ -301,7 +301,8 @@ const MessageBubble = memo(({ role, content, isStreaming }) => {
           color: '#d4d2d1',
           borderRadius: '3px',
           minWidth: 0,
-          maxWidth: isUser ? '88%' : '100%',
+          width: isUser ? 'fit-content' : '100%',
+          maxWidth: isUser ? '85%' : '100%',
         }}
       >
         {isUser ? (

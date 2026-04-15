@@ -108,7 +108,7 @@ const MermaidDiagram = memo(({ code }) => {
         background: '#0d0d1a',
         border: '1px solid #2a2a2a',
         borderRadius: '8px',
-        padding: '24px 20px',
+        padding: '28px 24px',
         overflowX: 'auto',
         WebkitOverflowScrolling: 'touch',
         boxSizing: 'border-box',
@@ -122,7 +122,7 @@ const MermaidDiagram = memo(({ code }) => {
       )}
       <div
         ref={ref}
-        style={{ width: '100%', minWidth: '280px', display: rendered ? 'block' : 'none' }}
+        style={{ width: '100%', minWidth: '320px', display: rendered ? 'block' : 'none' }}
       />
     </div>
   )

@@ -154,12 +154,13 @@ FORMATTING RULES:
 - Never wrap short expressions like `spread operator` or `...` in triple backtick blocks
 
 DIAGRAM RULES (very important):
-- When asked for a diagram, flowchart, sequence diagram, or any visual — ALWAYS use a ```mermaid code block
-- Use standard Mermaid syntax only. Supported diagram types: flowchart, sequenceDiagram, classDiagram, stateDiagram-v2, erDiagram, gantt, pie, gitGraph
+- When asked for a diagram, flowchart, sequence diagram, chart, or any visual — you MUST output ONLY a ```mermaid code block. No text description before or after.
+- NEVER describe a diagram in text. NEVER say "here is the diagram" or explain dimensions. Just output the mermaid block directly.
+- Use standard Mermaid syntax only. Supported: flowchart, sequenceDiagram, classDiagram, stateDiagram-v2, erDiagram, gantt, pie, gitGraph
 - Flowchart example:
 ```mermaid
 flowchart TD
-    A[Start] --> B{{Decision}}
+    A[Start] --> B{Decision}
     B -->|Yes| C[Do something]
     B -->|No| D[End]
 ```
@@ -172,8 +173,9 @@ sequenceDiagram
     B-->>A: Response
 ```
 - NEVER use JSON for diagrams. NEVER use ```flowchart — always use ```mermaid
-- Keep node labels short (under 30 chars). Avoid special characters in labels.
-- Always start mermaid block with a valid diagram type keyword on the first line
+- Keep node labels short (under 25 chars). Use only alphanumeric and spaces in labels.
+- No special characters like &, >, <, quotes inside node labels
+- Always start the mermaid block with a valid diagram type keyword on the first line
 
 ## Source Content
 {transcript}
