@@ -73,7 +73,7 @@ const MermaidDiagram = memo(({ code }) => {
 
           svgEl.removeAttribute('width')
           svgEl.removeAttribute('height')
-          svgEl.style.cssText = 'width:600px;height:400px;display:block;max-width:100%;'
+          svgEl.style.cssText = 'width:600px;height:400px;display:block;max-width:100%;margin:0 auto;'
 
           // Fix foreignObject height errors
           svgEl.querySelectorAll('foreignObject').forEach(fo => {
@@ -114,10 +114,12 @@ const MermaidDiagram = memo(({ code }) => {
         boxSizing: 'border-box',
         maxWidth: '640px',
         width: '100%',
+        margin: '16px auto',
+        textAlign: 'left',
       }}
     >
       {!rendered && (
-        <div className="flex items-center gap-2 text-xs" style={{ color: '#555' }}>
+        <div className="flex items-center justify-center gap-2 text-xs" style={{ color: '#555' }}>
           <span className="animate-spin inline-block w-3 h-3 rounded-full" style={{ border: '1.5px solid #CABEFF', borderTopColor: 'transparent' }} />
           Rendering diagram...
         </div>
