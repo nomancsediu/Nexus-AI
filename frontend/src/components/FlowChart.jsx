@@ -50,28 +50,26 @@ const MermaidDiagram = memo(({ code }) => {
       .catch(err => { setError('Could not render diagram'); console.warn('Mermaid:', err) })
   }, [code])
 
-  // After SVG is injected into DOM, fix its dimensions directly
   useEffect(() => {
     if (!svg || !wrapRef.current) return
     const svgEl = wrapRef.current.querySelector('svg')
     if (!svgEl) return
 
-    // Preserve viewBox for scaling, then let CSS control size
-    const vb = svgEl.getAttribute('viewBox')
-    if (!vb) {
-      const w = svgEl.getAttribute('width') || '800'
-      const h = svgEl.getAttribute('height') || '400'
-      svgEl.setAttribute('viewBox', `0 0 ${parseFloat(w)} ${parseFloat(h)}`)
+    // Get the real width/height from attributes or bounding box
+    const rawW = parseFloat(svgEl.getAttribute('width')) || svgEl.getBoundingClientRect().width || 800
+    const rawH = parseFloat(svgEl.getAttribute('height')) || svgEl.getBoundingClientRect().height || 400
+
+    // Set viewBox from real dimensions if missing
+    if (!svgEl.getAttribute('viewBox')) {
+      svgEl.setAttribute('viewBox', `0 0 ${rawW} ${rawH}`)
     }
 
-    svgEl.setAttribute('width', '100%')
+    // Now make it fully responsive — CSS will scale it
+    svgEl.removeAttribute('width')
     svgEl.removeAttribute('height')
-    svgEl.style.width = '100%'
-    svgEl.style.height = 'auto'
-    svgEl.style.display = 'block'
-    svgEl.style.maxWidth = '100%'
+    svgEl.style.cssText = 'width:100%;height:auto;display:block;'
 
-    // Fix any foreignObject height="auto" errors
+    // Fix foreignObject invalid height
     svgEl.querySelectorAll('foreignObject').forEach(fo => {
       const h = fo.getAttribute('height')
       if (!h || h === 'auto' || isNaN(parseFloat(h))) {
@@ -97,11 +95,19 @@ const MermaidDiagram = memo(({ code }) => {
   return (
     <div
       className="my-4 w-full"
-      style={{ background: '#0e0e0e', border: '1px solid #2a2a2a', borderRadius: '6px', padding: '20px', overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}
+      style={{
+        background: '#0e0e0e',
+        border: '1px solid #2a2a2a',
+        borderRadius: '6px',
+        padding: '20px',
+        overflowX: 'auto',
+        WebkitOverflowScrolling: 'touch',
+        boxSizing: 'border-box',
+      }}
     >
       <div
         ref={wrapRef}
-        style={{ width: '100%' }}
+        style={{ width: '100%', lineHeight: 0 }}
         dangerouslySetInnerHTML={{ __html: svg }}
       />
     </div>
