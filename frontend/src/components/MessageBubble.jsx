@@ -51,9 +51,10 @@ function parseSeparator(sepLine) {
 }
 
 function MarkdownTable({ rows }) {
+  if (!rows || rows.length < 2) return null
   const headers = parseTableRow(rows[0])
   const aligns = parseSeparator(rows[1])
-  const dataRows = rows.slice(2)
+  const dataRows = rows.slice(2).filter(r => isTableRow(r))
 
   return (
     <div className="my-4 overflow-x-auto" style={{ borderRadius: '6px', border: '1px solid #2a2a2a' }}>
@@ -139,7 +140,7 @@ function parseContent(content) {
         codeLines.push(lines[i])
         i++
       }
-      parts.push({ type: 'code', lang, value: codeLines.join('\n') })
+      parts.push({ type: 'code', lang, value: codeLines.join('\n') || '' })
       i++ // skip closing ```
       continue
     }
@@ -259,21 +260,23 @@ const MessageBubble = memo(({ role, content, isStreaming }) => {
                 <div key={i} className="my-3 overflow-hidden" style={{ border: '1px solid #1e1e1e', borderRadius: '3px' }}>
                   <div className="flex items-center justify-between px-3 sm:px-4 py-2" style={{ background: '#0a0a0a', borderBottom: '1px solid #1e1e1e' }}>
                     <span className="text-[10px] font-mono uppercase tracking-wider" style={{ color: '#444' }}>{part.lang}</span>
-                    <CopyButton text={part.value} />
+                    <CopyButton text={part.value || ''} />
                   </div>
                   <div className="overflow-x-auto">
                     <SyntaxHighlighter
                       language={part.lang || 'text'}
                       style={oneDark}
                       customStyle={{ margin: 0, borderRadius: 0, background: '#0a0a0a', fontSize: '0.7rem' }}
-                      showLineNumbers={part.value.split('\n').length > 4}
+                      showLineNumbers={(part.value || '').split('\n').length > 4}
                     >
-                      {part.value}
+                      {part.value || ''}
                     </SyntaxHighlighter>
                   </div>
                 </div>
+              ) : part.type === 'table' ? (
+                <MarkdownTable key={i} rows={part.rows} />
               ) : (
-                <TextBlock key={i} text={part.value} />
+                <TextBlock key={i} text={part.value || ''} />
               )
             )}
           </div>
