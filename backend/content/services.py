@@ -77,6 +77,16 @@ def fix_tables(text):
     return '\n'.join(expand(line) for line in text.split('\n'))
 
 
+def fix_mermaid_blocks(text):
+    def replacer(m):
+        code = m.group(1)
+        code = code.replace('&gt;', '>').replace('&lt;', '<').replace('&amp;', '&').replace('&quot;', '"').replace('&#39;', "'")
+        code = re.sub(r'\|>\s', '| ', code)
+        code = re.sub(r'\|>$', '|', code, flags=re.MULTILINE)
+        return f'```mermaid\n{code}\n```'
+    return re.sub(r'```mermaid\s*\n(.*?)```', replacer, text, flags=re.DOTALL)
+
+
 def fix_chart_blocks(text):
     def replacer(m):
         code = _decode_html(m.group(1).strip())
@@ -179,6 +189,7 @@ sequenceDiagram
     full_text = re.sub(r'`([^`]+)`(```)', r'`\1`\n\2', full_text)
     full_text = re.sub(r'(```)`', r'\1\n`', full_text)
     full_text = fix_flowchart_blocks(full_text)
+    full_text = fix_mermaid_blocks(full_text)
     full_text = fix_chart_blocks(full_text)
     full_text = fix_tables(full_text)
 

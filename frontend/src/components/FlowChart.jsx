@@ -36,7 +36,18 @@ const MermaidDiagram = memo(({ code }) => {
   useEffect(() => {
     if (!code?.trim()) return
     const id = `mermaid-${++idCounter}`
-    mermaid.render(id, code.trim())
+    // Decode HTML entities before passing to mermaid
+    const decoded = code.trim()
+      .replace(/&gt;/g, '>')
+      .replace(/&lt;/g, '<')
+      .replace(/&amp;/g, '&')
+      .replace(/&quot;/g, '"')
+      .replace(/&#39;/g, "'")
+      .replace(/&nbsp;/g, ' ')
+      // Fix arrow syntax: -->|label|> should be -->|label|
+      .replace(/-->/g, '-->')
+      .replace(/\|>/g, '|')
+    mermaid.render(id, decoded)
       .then(({ svg }) => { setSvg(svg); setError('') })
       .catch(err => {
         setError('Could not render diagram')
