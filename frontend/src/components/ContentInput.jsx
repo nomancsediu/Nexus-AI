@@ -182,6 +182,22 @@ export default function ContentInput({ onProcessed, apiKey, supadataKey, onSetti
         </div>
       </div>
 
+      {/* Footer */}
+      <footer className="shrink-0 py-4 text-center" style={{ borderTop: '1px solid #1a1a1a' }}>
+        <p className="text-[11px]" style={{ color: '#444' }}>
+          Developed by{' '}
+          <a
+            href="https://abdnoman.com"
+            target="_blank"
+            rel="noreferrer"
+            className="transition-opacity hover:opacity-80"
+            style={{ color: '#CABEFF' }}
+          >
+            Abdullah Al Noman
+          </a>
+        </p>
+      </footer>
+
       {/* Ambient glow */}
       <div className="fixed inset-0 pointer-events-none -z-10 overflow-hidden">
         <div style={{ position: 'absolute', top: '-15%', right: '-10%', width: '55%', height: '55%', background: 'radial-gradient(circle, rgba(202,190,255,0.05) 0%, transparent 70%)', filter: 'blur(60px)' }} />
