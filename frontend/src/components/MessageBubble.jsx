@@ -26,59 +26,89 @@ function decodeHtml(s) {
     .replace(/&nbsp;/g, ' ')
 }
 
-function isTableRow(line) {
-  return line.trim().startsWith('|') && line.trim().endsWith('|')
+// ── Table helpers ──────────────────────────────────────────────────────────────
+
+function isPipeRow(line) {
+  const t = line.trim()
+  return t.startsWith('|') && t.endsWith('|') && t.length > 2
 }
 
-function isSeparatorRow(line) {
-  const trimmed = line.trim()
-  if (!isTableRow(trimmed)) return false
-  const inner = trimmed.slice(1, -1)
-  return inner.split('|').every(cell => /^\s*:?-+:?\s*$/.test(cell))
+function isPipeSeparator(line) {
+  const t = line.trim()
+  if (!isPipeRow(t)) return false
+  return t.slice(1, -1).split('|').every(c => /^\s*:?-+:?\s*$/.test(c))
 }
 
-function parseTableRow(line) {
-  return line.trim().slice(1, -1).split('|').map(cell => cell.trim())
+function parsePipeRow(line) {
+  return line.trim().slice(1, -1).split('|').map(c => c.trim())
 }
 
-function parseSeparator(sepLine) {
-  return sepLine.trim().slice(1, -1).split('|').map(cell => {
-    const t = cell.trim()
+function isTabRow(line) {
+  return line.includes('\t') && !line.trim().startsWith('|')
+}
+
+function parseTabRow(line) {
+  return line.split('\t').map(c => c.trim()).filter((c, i, a) => !(i === 0 && c === '') && !(i === a.length - 1 && c === ''))
+}
+
+function parseSeparatorAligns(sepLine) {
+  const cells = isPipeRow(sepLine) ? parsePipeRow(sepLine) : parseTabRow(sepLine)
+  return cells.map(c => {
+    const t = c.trim()
     if (t.startsWith(':') && t.endsWith(':')) return 'center'
     if (t.endsWith(':')) return 'right'
     return 'left'
   })
 }
 
-function MarkdownTable({ rows }) {
-  if (!rows || rows.length < 2) return null
-  const headers = parseTableRow(rows[0])
-  const aligns = parseSeparator(rows[1])
-  const dataRows = rows.slice(2).filter(r => isTableRow(r))
+function renderInline(text) {
+  if (!text) return text
+  const parts = []
+  // Fix: use [\s\S]+? to match bold/italic across any chars including spaces
+  const regex = /(`[^`]+`|\*\*[\s\S]+?\*\*|\*[\s\S]+?\*)/g
+  let last = 0, m
+  while ((m = regex.exec(text)) !== null) {
+    if (m.index > last) parts.push(<span key={last}>{text.slice(last, m.index)}</span>)
+    const raw = m[0]
+    if (raw.startsWith('`'))
+      parts.push(<code key={m.index} className="px-1.5 py-0.5 text-[0.8em] font-mono" style={{ background: 'rgba(202,190,255,0.08)', color: '#CABEFF', border: '1px solid rgba(202,190,255,0.12)', borderRadius: '2px' }}>{raw.slice(1, -1)}</code>)
+    else if (raw.startsWith('**'))
+      parts.push(<strong key={m.index} style={{ color: '#e7e5e4', fontWeight: 700 }}>{raw.slice(2, -2)}</strong>)
+    else
+      parts.push(<em key={m.index} style={{ color: '#aaa' }}>{raw.slice(1, -1)}</em>)
+    last = m.index + raw.length
+  }
+  if (last < text.length) parts.push(<span key={last}>{text.slice(last)}</span>)
+  return parts.length ? parts : text
+}
 
+// ── Table component ────────────────────────────────────────────────────────────
+
+function MarkdownTable({ headers, aligns, dataRows }) {
+  if (!headers?.length) return null
   return (
-    <div className="my-4 overflow-x-auto" style={{ borderRadius: '6px', border: '1px solid #2a2a2a' }}>
-      <table className="w-full text-xs border-collapse" style={{ minWidth: 'max-content' }}>
+    <div className="my-4 w-full overflow-x-auto" style={{ borderRadius: '6px', border: '1px solid #2a2a2a' }}>
+      <table className="text-xs border-collapse" style={{ minWidth: '100%', tableLayout: 'auto' }}>
         <thead>
           <tr style={{ background: 'rgba(202,190,255,0.08)', borderBottom: '1px solid #2a2a2a' }}>
             {headers.map((h, i) => (
               <th
                 key={i}
-                className="px-4 py-2.5 text-xs font-bold uppercase tracking-wider whitespace-nowrap"
+                className="px-3 sm:px-4 py-2.5 text-xs font-bold uppercase tracking-wider"
                 style={{
                   color: '#CABEFF',
                   textAlign: aligns[i] || 'left',
                   borderRight: i < headers.length - 1 ? '1px solid #2a2a2a' : 'none',
+                  whiteSpace: 'nowrap',
                 }}
               >
-                {h}
+                {renderInline(h)}
               </th>
             ))}
           </tr>
         </thead>
         <tbody>
-          {dataRows.map((row, ri) => {
-            const cells = parseTableRow(row)
+          {dataRows.map((cells, ri) => {
             const isEven = ri % 2 === 1
             return (
               <tr
@@ -94,12 +124,13 @@ function MarkdownTable({ rows }) {
                 {cells.map((cell, ci) => (
                   <td
                     key={ci}
-                    className="px-4 py-2.5 text-xs"
+                    className="px-3 sm:px-4 py-2.5 text-xs"
                     style={{
                       color: ci === 0 ? '#d4d2d1' : '#888',
                       textAlign: aligns[ci] || 'left',
                       borderRight: ci < cells.length - 1 ? '1px solid #1e1e1e' : 'none',
-                      whiteSpace: 'nowrap',
+                      whiteSpace: 'normal',
+                      wordBreak: 'break-word',
                     }}
                   >
                     {renderInline(cell)}
@@ -113,6 +144,8 @@ function MarkdownTable({ rows }) {
     </div>
   )
 }
+
+// ── Content parser ─────────────────────────────────────────────────────────────
 
 function parseContent(content) {
   const parts = []
@@ -141,20 +174,48 @@ function parseContent(content) {
         i++
       }
       parts.push({ type: 'code', lang, value: codeLines.join('\n') || '' })
-      i++ // skip closing ```
+      i++
       continue
     }
 
-    // Table block
-    if (isTableRow(line) && lines[i + 1] && isSeparatorRow(lines[i + 1])) {
+    // Pipe table
+    if (isPipeRow(line) && lines[i + 1] && isPipeSeparator(lines[i + 1])) {
       flushText()
-      const tableRows = []
-      while (i < lines.length && isTableRow(lines[i])) {
-        tableRows.push(lines[i])
+      const headers = parsePipeRow(line)
+      const aligns = parseSeparatorAligns(lines[i + 1])
+      i += 2
+      const dataRows = []
+      while (i < lines.length && isPipeRow(lines[i])) {
+        dataRows.push(parsePipeRow(lines[i]))
         i++
       }
-      parts.push({ type: 'table', rows: tableRows })
+      parts.push({ type: 'table', headers, aligns, dataRows })
       continue
+    }
+
+    // Tab-separated table (header row followed by data rows with tabs)
+    if (isTabRow(line) && lines[i + 1] && isTabRow(lines[i + 1])) {
+      flushText()
+      const headers = parseTabRow(line)
+      // check if next line is a separator (---)
+      let startData = i + 1
+      const aligns = new Array(headers.length).fill('left')
+      if (/^[\s\-\t]+$/.test(lines[i + 1])) startData = i + 2
+      i = startData
+      const dataRows = []
+      while (i < lines.length && isTabRow(lines[i])) {
+        dataRows.push(parseTabRow(lines[i]))
+        i++
+      }
+      if (dataRows.length > 0) {
+        parts.push({ type: 'table', headers, aligns, dataRows })
+        continue
+      } else {
+        // not enough rows, treat as text
+        textBuffer.push(line)
+        i = startData
+        continue
+      }
     }
 
     textBuffer.push(line)
@@ -165,24 +226,7 @@ function parseContent(content) {
   return parts
 }
 
-function renderInline(text) {
-  const parts = []
-  const regex = /(`[^`]+`|\*\*[^*]+\*\*|\*[^*]+\*)/g
-  let last = 0, m
-  while ((m = regex.exec(text)) !== null) {
-    if (m.index > last) parts.push(<span key={last}>{text.slice(last, m.index)}</span>)
-    const raw = m[0]
-    if (raw.startsWith('`'))
-      parts.push(<code key={m.index} className="px-1.5 py-0.5 text-[0.8em] font-mono break-all" style={{ background: 'rgba(202,190,255,0.08)', color: '#CABEFF', border: '1px solid rgba(202,190,255,0.12)', borderRadius: '2px' }}>{raw.slice(1, -1)}</code>)
-    else if (raw.startsWith('**'))
-      parts.push(<strong key={m.index} style={{ color: '#e7e5e4' }}>{raw.slice(2, -2)}</strong>)
-    else
-      parts.push(<em key={m.index} style={{ color: '#aaa' }}>{raw.slice(1, -1)}</em>)
-    last = m.index + raw.length
-  }
-  if (last < text.length) parts.push(<span key={last}>{text.slice(last)}</span>)
-  return parts.length ? parts : text
-}
+// ── TextBlock ──────────────────────────────────────────────────────────────────
 
 function TextBlock({ text }) {
   const lines = text.split('\n')
@@ -192,32 +236,19 @@ function TextBlock({ text }) {
   while (i < lines.length) {
     const line = lines[i]
 
-    // Detect table block
-    if (isTableRow(line) && lines[i + 1] && isSeparatorRow(lines[i + 1])) {
-      const tableRows = []
-      while (i < lines.length && isTableRow(lines[i])) {
-        tableRows.push(lines[i])
-        i++
-      }
-      output.push(<MarkdownTable key={`table-${i}`} rows={tableRows} />)
-      continue
-    }
-
     if (line.trim() === '' || line.trim() === '---') {
       output.push(<div key={i} style={{ height: '8px' }} />)
-    } else if (line.startsWith('# ') || line.startsWith('## ') || line.startsWith('### ')) {
-      const headingText = line.replace(/^#+\s/, '')
+    } else if (/^#{1,3} /.test(line)) {
       output.push(
         <div key={i} className="font-bold mt-4 mb-1" style={{ color: '#e7e5e4', fontSize: '0.9rem' }}>
-          {renderInline(headingText)}
+          {renderInline(line.replace(/^#+\s/, ''))}
         </div>
       )
     } else if (line.trimStart().startsWith('- ') || line.trimStart().startsWith('* ')) {
-      const bulletText = line.replace(/^\s*[-*]\s+/, '')
       output.push(
         <div key={i} className="flex gap-2 my-0.5 pl-2">
           <span style={{ color: '#CABEFF' }}>•</span>
-          <span className="min-w-0 break-words">{renderInline(bulletText)}</span>
+          <span className="min-w-0 break-words">{renderInline(line.replace(/^\s*[-*]\s+/, ''))}</span>
         </div>
       )
     } else {
@@ -233,9 +264,11 @@ function TextBlock({ text }) {
   return <div>{output}</div>
 }
 
+// ── MessageBubble ──────────────────────────────────────────────────────────────
+
 const MessageBubble = memo(({ role, content, isStreaming }) => {
   const isUser = role === 'user'
-  const decoded = decodeHtml(content)
+  const decoded = decodeHtml(content || '')
   const parts = isUser ? null : parseContent(decoded)
 
   return (
@@ -248,7 +281,7 @@ const MessageBubble = memo(({ role, content, isStreaming }) => {
       </div>
 
       <div
-        className="min-w-0 max-w-[88%] sm:max-w-[82%] md:max-w-[78%] px-3 sm:px-4 py-2.5 sm:py-3 text-xs sm:text-sm leading-relaxed overflow-hidden"
+        className="min-w-0 max-w-[92%] sm:max-w-[85%] md:max-w-[80%] px-3 sm:px-4 py-2.5 sm:py-3 text-xs sm:text-sm leading-relaxed overflow-hidden"
         style={{ background: isUser ? 'rgba(202,190,255,0.07)' : '#111', border: `1px solid ${isUser ? 'rgba(202,190,255,0.15)' : '#1a1a1a'}`, color: '#d4d2d1', borderRadius: '3px' }}
       >
         {isUser ? (
@@ -274,7 +307,7 @@ const MessageBubble = memo(({ role, content, isStreaming }) => {
                   </div>
                 </div>
               ) : part.type === 'table' ? (
-                <MarkdownTable key={i} rows={part.rows} />
+                <MarkdownTable key={i} headers={part.headers} aligns={part.aligns} dataRows={part.dataRows} />
               ) : (
                 <TextBlock key={i} text={part.value || ''} />
               )
