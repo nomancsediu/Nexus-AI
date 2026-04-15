@@ -172,6 +172,7 @@ sequenceDiagram
     A->>B: Request
     B-->>A: Response
 ```
+- Keep diagrams compact and simple. Max 8-10 nodes for flowcharts. Do not make overly large or complex diagrams.
 - NEVER use JSON for diagrams. NEVER use ```flowchart — always use ```mermaid
 - Keep node labels short (under 25 chars). Use only alphanumeric and spaces in labels.
 - No special characters like &, >, <, quotes inside node labels

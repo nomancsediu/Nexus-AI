@@ -103,15 +103,16 @@ const MermaidDiagram = memo(({ code }) => {
 
   return (
     <div
-      className="my-4 w-full"
+      className="my-4"
       style={{
         background: '#0d0d1a',
         border: '1px solid #2a2a2a',
         borderRadius: '8px',
-        padding: '28px 24px',
+        padding: '20px',
         overflowX: 'auto',
         WebkitOverflowScrolling: 'touch',
         boxSizing: 'border-box',
+        maxWidth: '520px',
       }}
     >
       {!rendered && (
@@ -122,7 +123,7 @@ const MermaidDiagram = memo(({ code }) => {
       )}
       <div
         ref={ref}
-        style={{ width: '100%', minWidth: '320px', display: rendered ? 'block' : 'none' }}
+        style={{ width: '100%', minWidth: '280px', display: rendered ? 'block' : 'none' }}
       />
     </div>
   )
