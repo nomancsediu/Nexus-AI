@@ -31,7 +31,10 @@ function isTableRow(line) {
 }
 
 function isSeparatorRow(line) {
-  return isTableRow(line) && /^\|[\s\-:|]+\|$/.test(line.trim().replace(/\|[\s\-:|]+/g, '|'))
+  const trimmed = line.trim()
+  if (!isTableRow(trimmed)) return false
+  const inner = trimmed.slice(1, -1)
+  return inner.split('|').every(cell => /^\s*:?-+:?\s*$/.test(cell))
 }
 
 function parseTableRow(line) {
@@ -112,22 +115,52 @@ function MarkdownTable({ rows }) {
 
 function parseContent(content) {
   const parts = []
-  const codeBlockRegex = /```(\w*)\n([\s\S]*?)```/g
-  let last = 0
-  let match
+  const lines = content.split('\n')
+  let i = 0
+  let textBuffer = []
 
-  while ((match = codeBlockRegex.exec(content)) !== null) {
-    if (match.index > last) {
-      parts.push({ type: 'text', value: content.slice(last, match.index) })
+  const flushText = () => {
+    if (textBuffer.length) {
+      parts.push({ type: 'text', value: textBuffer.join('\n') })
+      textBuffer = []
     }
-    parts.push({ type: 'code', lang: match[1] || 'text', value: match[2] })
-    last = match.index + match[0].length
   }
 
-  if (last < content.length) {
-    parts.push({ type: 'text', value: content.slice(last) })
+  while (i < lines.length) {
+    const line = lines[i]
+
+    // Code block
+    if (line.startsWith('```')) {
+      flushText()
+      const lang = line.slice(3).trim() || 'text'
+      const codeLines = []
+      i++
+      while (i < lines.length && !lines[i].startsWith('```')) {
+        codeLines.push(lines[i])
+        i++
+      }
+      parts.push({ type: 'code', lang, value: codeLines.join('\n') })
+      i++ // skip closing ```
+      continue
+    }
+
+    // Table block
+    if (isTableRow(line) && lines[i + 1] && isSeparatorRow(lines[i + 1])) {
+      flushText()
+      const tableRows = []
+      while (i < lines.length && isTableRow(lines[i])) {
+        tableRows.push(lines[i])
+        i++
+      }
+      parts.push({ type: 'table', rows: tableRows })
+      continue
+    }
+
+    textBuffer.push(line)
+    i++
   }
 
+  flushText()
   return parts
 }
 
