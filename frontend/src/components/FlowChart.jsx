@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState, memo } from 'react'
 import mermaid from 'mermaid'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faCopy, faCheck, faImage } from '@fortawesome/free-solid-svg-icons'
 
 mermaid.initialize({
   startOnLoad: false,
@@ -45,6 +47,34 @@ const MermaidDiagram = memo(({ code }) => {
   const ref = useRef(null)
   const [error, setError] = useState('')
   const [rendered, setRendered] = useState(false)
+  const [copied, setCopied] = useState(false)
+
+  const copyAsImage = () => {
+    const svgEl = ref.current?.querySelector('svg')
+    if (!svgEl) return
+    const svgData = new XMLSerializer().serializeToString(svgEl)
+    const canvas = document.createElement('canvas')
+    canvas.width = 600; canvas.height = 400
+    const ctx = canvas.getContext('2d')
+    ctx.fillStyle = '#0d0d1a'
+    ctx.fillRect(0, 0, 600, 400)
+    const img = new Image()
+    img.onload = () => {
+      ctx.drawImage(img, 0, 0, 600, 400)
+      canvas.toBlob(blob => {
+        navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })])
+          .then(() => { setCopied(true); setTimeout(() => setCopied(false), 2000) })
+          .catch(() => {
+            // fallback: download
+            const a = document.createElement('a')
+            a.href = canvas.toDataURL('image/png')
+            a.download = 'diagram.png'
+            a.click()
+          })
+      })
+    }
+    img.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgData)))
+  }
 
   useEffect(() => {
     if (!ref.current || !code?.trim()) return
@@ -122,6 +152,18 @@ const MermaidDiagram = memo(({ code }) => {
         <div className="flex items-center justify-center gap-2 text-xs" style={{ color: '#555' }}>
           <span className="animate-spin inline-block w-3 h-3 rounded-full" style={{ border: '1.5px solid #CABEFF', borderTopColor: 'transparent' }} />
           Rendering diagram...
+        </div>
+      )}
+      {rendered && (
+        <div className="flex justify-end mb-2">
+          <button
+            onClick={copyAsImage}
+            className="flex items-center gap-1.5 text-xs transition-colors cursor-pointer hover:opacity-80"
+            style={{ color: copied ? '#CABEFF' : '#444' }}
+          >
+            <FontAwesomeIcon icon={copied ? faCheck : faImage} style={{ fontSize: '10px' }} />
+            {copied ? 'Copied!' : 'Copy image'}
+          </button>
         </div>
       )}
       <div

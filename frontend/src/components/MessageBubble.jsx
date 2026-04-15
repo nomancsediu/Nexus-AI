@@ -5,7 +5,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCopy, faCheck, faRobot, faUser } from '@fortawesome/free-solid-svg-icons'
 import MermaidDiagram from './FlowChart'
 
-function CopyButton({ text }) {
+function CopyButton({ text, label = 'Copy' }) {
   const [copied, setCopied] = useState(false)
   const copy = () => {
     navigator.clipboard.writeText(text)
@@ -15,7 +15,7 @@ function CopyButton({ text }) {
   return (
     <button onClick={copy} className="flex items-center gap-1.5 text-xs transition-colors cursor-pointer" style={{ color: copied ? '#CABEFF' : '#444' }}>
       <FontAwesomeIcon icon={copied ? faCheck : faCopy} style={{ fontSize: '10px' }} />
-      {copied ? 'Copied' : 'Copy'}
+      {copied ? 'Copied' : label}
     </button>
   )
 }
@@ -69,7 +69,6 @@ function stripBold(text) {
 function renderInline(text) {
   if (!text) return text
   const parts = []
-  // Fix: use [\s\S]+? to match bold/italic across any chars including spaces
   const regex = /(`[^`]+`|\*\*[\s\S]+?\*\*|\*[\s\S]+?\*)/g
   let last = 0, m
   while ((m = regex.exec(text)) !== null) {
@@ -97,20 +96,7 @@ function MarkdownTable({ headers, aligns, dataRows }) {
         <thead>
           <tr style={{ background: 'rgba(202,190,255,0.08)', borderBottom: '1px solid #2a2a2a' }}>
             {headers.map((h, i) => (
-              <th
-                key={i}
-                style={{
-                  padding: '8px 12px',
-                  color: '#CABEFF',
-                  fontWeight: 700,
-                  fontSize: '11px',
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.05em',
-                  textAlign: aligns[i] || 'left',
-                  borderRight: i < headers.length - 1 ? '1px solid #2a2a2a' : 'none',
-                  whiteSpace: 'nowrap',
-                }}
-              >
+              <th key={i} style={{ padding: '8px 12px', color: '#CABEFF', fontWeight: 700, fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.05em', textAlign: aligns[i] || 'left', borderRight: i < headers.length - 1 ? '1px solid #2a2a2a' : 'none', whiteSpace: 'nowrap' }}>
                 {stripBold(h)}
               </th>
             ))}
@@ -120,32 +106,12 @@ function MarkdownTable({ headers, aligns, dataRows }) {
           {dataRows.map((cells, ri) => {
             const isEven = ri % 2 === 1
             return (
-              <tr
-                key={ri}
-                style={{
-                  background: isEven ? 'rgba(255,255,255,0.02)' : 'transparent',
-                  borderBottom: ri < dataRows.length - 1 ? '1px solid #1e1e1e' : 'none',
-                  transition: 'background 0.15s',
-                }}
+              <tr key={ri} style={{ background: isEven ? 'rgba(255,255,255,0.02)' : 'transparent', borderBottom: ri < dataRows.length - 1 ? '1px solid #1e1e1e' : 'none', transition: 'background 0.15s' }}
                 onMouseEnter={e => e.currentTarget.style.background = 'rgba(202,190,255,0.05)'}
                 onMouseLeave={e => e.currentTarget.style.background = isEven ? 'rgba(255,255,255,0.02)' : 'transparent'}
               >
                 {cells.map((cell, ci) => (
-                  <td
-                    key={ci}
-                    style={{
-                      padding: '7px 12px',
-                      color: ci === 0 ? '#d4d2d1' : '#888',
-                      fontSize: '12px',
-                      textAlign: aligns[ci] || 'left',
-                      borderRight: ci < cells.length - 1 ? '1px solid #1e1e1e' : 'none',
-                      whiteSpace: 'nowrap',
-                      maxWidth: '260px',
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                    }}
-                    title={typeof cell === 'string' ? cell : ''}
-                  >
+                  <td key={ci} style={{ padding: '7px 12px', color: ci === 0 ? '#d4d2d1' : '#888', fontSize: '12px', textAlign: aligns[ci] || 'left', borderRight: ci < cells.length - 1 ? '1px solid #1e1e1e' : 'none', whiteSpace: 'nowrap', maxWidth: '260px', overflow: 'hidden', textOverflow: 'ellipsis' }} title={typeof cell === 'string' ? cell : ''}>
                     {renderInline(cell)}
                   </td>
                 ))}
@@ -167,72 +133,46 @@ function parseContent(content) {
   let textBuffer = []
 
   const flushText = () => {
-    if (textBuffer.length) {
-      parts.push({ type: 'text', value: textBuffer.join('\n') })
-      textBuffer = []
-    }
+    if (textBuffer.length) { parts.push({ type: 'text', value: textBuffer.join('\n') }); textBuffer = [] }
   }
 
   while (i < lines.length) {
     const line = lines[i]
 
-    // Code block
     if (line.startsWith('```')) {
       flushText()
       const lang = line.slice(3).trim() || 'text'
       const codeLines = []
       i++
-      while (i < lines.length && !lines[i].startsWith('```')) {
-        codeLines.push(lines[i])
-        i++
-      }
+      while (i < lines.length && !lines[i].startsWith('```')) { codeLines.push(lines[i]); i++ }
       parts.push({ type: 'code', lang, value: codeLines.join('\n') || '' })
-      i++
-      continue
+      i++; continue
     }
 
-    // Pipe table
     if (isPipeRow(line) && lines[i + 1] && isPipeSeparator(lines[i + 1])) {
       flushText()
       const headers = parsePipeRow(line)
       const aligns = parseSeparatorAligns(lines[i + 1])
       i += 2
       const dataRows = []
-      while (i < lines.length && isPipeRow(lines[i])) {
-        dataRows.push(parsePipeRow(lines[i]))
-        i++
-      }
-      parts.push({ type: 'table', headers, aligns, dataRows })
-      continue
+      while (i < lines.length && isPipeRow(lines[i])) { dataRows.push(parsePipeRow(lines[i])); i++ }
+      parts.push({ type: 'table', headers, aligns, dataRows }); continue
     }
 
-    // Tab-separated table (header row followed by data rows with tabs)
     if (isTabRow(line) && lines[i + 1] && isTabRow(lines[i + 1])) {
       flushText()
       const headers = parseTabRow(line)
-      // check if next line is a separator (---)
       let startData = i + 1
       const aligns = new Array(headers.length).fill('left')
       if (/^[\s\-\t]+$/.test(lines[i + 1])) startData = i + 2
       i = startData
       const dataRows = []
-      while (i < lines.length && isTabRow(lines[i])) {
-        dataRows.push(parseTabRow(lines[i]))
-        i++
-      }
-      if (dataRows.length > 0) {
-        parts.push({ type: 'table', headers, aligns, dataRows })
-        continue
-      } else {
-        // not enough rows, treat as text
-        textBuffer.push(line)
-        i = startData
-        continue
-      }
+      while (i < lines.length && isTabRow(lines[i])) { dataRows.push(parseTabRow(lines[i])); i++ }
+      if (dataRows.length > 0) { parts.push({ type: 'table', headers, aligns, dataRows }); continue }
+      else { textBuffer.push(line); i = startData; continue }
     }
 
-    textBuffer.push(line)
-    i++
+    textBuffer.push(line); i++
   }
 
   flushText()
@@ -245,36 +185,32 @@ function TextBlock({ text }) {
   const lines = text.split('\n')
   const output = []
   let i = 0
-
   while (i < lines.length) {
     const line = lines[i]
-
     if (line.trim() === '' || line.trim() === '---') {
       output.push(<div key={i} style={{ height: '8px' }} />)
     } else if (/^#{1,3} /.test(line)) {
-      output.push(
-        <div key={i} className="font-bold mt-4 mb-1" style={{ color: '#e7e5e4', fontSize: '0.9rem' }}>
-          {renderInline(line.replace(/^#+\s/, ''))}
-        </div>
-      )
+      output.push(<div key={i} className="font-bold mt-4 mb-1" style={{ color: '#e7e5e4', fontSize: '0.9rem' }}>{renderInline(line.replace(/^#+\s/, ''))}</div>)
     } else if (line.trimStart().startsWith('- ') || line.trimStart().startsWith('* ')) {
-      output.push(
-        <div key={i} className="flex gap-2 my-0.5 pl-2">
-          <span style={{ color: '#CABEFF' }}>•</span>
-          <span className="min-w-0 break-words">{renderInline(line.replace(/^\s*[-*]\s+/, ''))}</span>
-        </div>
-      )
+      output.push(<div key={i} className="flex gap-2 my-0.5 pl-2"><span style={{ color: '#CABEFF' }}>•</span><span className="min-w-0 break-words">{renderInline(line.replace(/^\s*[-*]\s+/, ''))}</span></div>)
     } else {
-      output.push(
-        <div key={i} className="my-0.5 leading-relaxed break-words">
-          {renderInline(line)}
-        </div>
-      )
+      output.push(<div key={i} className="my-0.5 leading-relaxed break-words">{renderInline(line)}</div>)
     }
     i++
   }
-
   return <div>{output}</div>
+}
+
+// ── Plain text extractor (for copy) ───────────────────────────────────────────
+
+function extractPlainText(content) {
+  return content
+    .replace(/```[\s\S]*?```/g, '[code block]')
+    .replace(/\*\*(.*?)\*\*/g, '$1')
+    .replace(/\*(.*?)\*/g, '$1')
+    .replace(/`([^`]+)`/g, '$1')
+    .replace(/^#+\s/gm, '')
+    .trim()
 }
 
 // ── MessageBubble ──────────────────────────────────────────────────────────────
@@ -283,9 +219,14 @@ const MessageBubble = memo(({ role, content, isStreaming }) => {
   const isUser = role === 'user'
   const decoded = decodeHtml(content || '')
   const parts = isUser ? null : parseContent(decoded)
+  const [showCopy, setShowCopy] = useState(false)
 
   return (
-    <div className={`flex gap-2 sm:gap-3 ${isUser ? 'flex-row-reverse' : 'flex-row'}`}>
+    <div
+      className={`flex gap-2 sm:gap-3 ${isUser ? 'flex-row-reverse' : 'flex-row'}`}
+      onMouseEnter={() => setShowCopy(true)}
+      onMouseLeave={() => setShowCopy(false)}
+    >
       <div
         className="shrink-0 w-6 h-6 sm:w-7 sm:h-7 flex items-center justify-center"
         style={{ background: isUser ? '#CABEFF' : '#161616', border: isUser ? 'none' : '1px solid #1e1e1e', borderRadius: '3px' }}
@@ -303,8 +244,19 @@ const MessageBubble = memo(({ role, content, isStreaming }) => {
           minWidth: 0,
           width: isUser ? 'fit-content' : '100%',
           maxWidth: isUser ? '85%' : '100%',
+          position: 'relative',
         }}
       >
+        {/* Copy text button — top right on hover */}
+        {!isUser && !isStreaming && (
+          <div
+            className="absolute top-2 right-2 transition-opacity duration-150"
+            style={{ opacity: showCopy ? 1 : 0, pointerEvents: showCopy ? 'auto' : 'none' }}
+          >
+            <CopyButton text={extractPlainText(decoded)} label="Copy" />
+          </div>
+        )}
+
         {isUser ? (
           <span className="whitespace-pre-wrap break-words">{content}</span>
         ) : (
@@ -314,22 +266,22 @@ const MessageBubble = memo(({ role, content, isStreaming }) => {
                 part.lang === 'mermaid' ? (
                   <MermaidDiagram key={i} code={part.value || ''} />
                 ) : (
-                <div key={i} className="my-3 overflow-hidden" style={{ border: '1px solid #1e1e1e', borderRadius: '3px' }}>
-                  <div className="flex items-center justify-between px-3 sm:px-4 py-2" style={{ background: '#0a0a0a', borderBottom: '1px solid #1e1e1e' }}>
-                    <span className="text-[10px] font-mono uppercase tracking-wider" style={{ color: '#444' }}>{part.lang}</span>
-                    <CopyButton text={part.value || ''} />
+                  <div key={i} className="my-3 overflow-hidden" style={{ border: '1px solid #1e1e1e', borderRadius: '3px' }}>
+                    <div className="flex items-center justify-between px-3 sm:px-4 py-2" style={{ background: '#0a0a0a', borderBottom: '1px solid #1e1e1e' }}>
+                      <span className="text-[10px] font-mono uppercase tracking-wider" style={{ color: '#444' }}>{part.lang}</span>
+                      <CopyButton text={part.value || ''} />
+                    </div>
+                    <div className="overflow-x-auto">
+                      <SyntaxHighlighter
+                        language={part.lang || 'text'}
+                        style={oneDark}
+                        customStyle={{ margin: 0, borderRadius: 0, background: '#0a0a0a', fontSize: '0.7rem' }}
+                        showLineNumbers={(part.value || '').split('\n').length > 4}
+                      >
+                        {part.value || ''}
+                      </SyntaxHighlighter>
+                    </div>
                   </div>
-                  <div className="overflow-x-auto">
-                    <SyntaxHighlighter
-                      language={part.lang || 'text'}
-                      style={oneDark}
-                      customStyle={{ margin: 0, borderRadius: 0, background: '#0a0a0a', fontSize: '0.7rem' }}
-                      showLineNumbers={(part.value || '').split('\n').length > 4}
-                    >
-                      {part.value || ''}
-                    </SyntaxHighlighter>
-                  </div>
-                </div>
                 )
               ) : part.type === 'table' ? (
                 <MarkdownTable key={i} headers={part.headers} aligns={part.aligns} dataRows={part.dataRows} />
